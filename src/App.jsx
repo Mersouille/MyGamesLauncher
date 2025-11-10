@@ -81,6 +81,18 @@ export default function App() {
     setTimeout(() => setToast({ visible: false, text: "", color: "#0d6efd" }), 2000);
   };
 
+  // ⚙️ Gestionnaire de changement des paramètres (doit être avant useBackgroundMusic)
+  const handleSettingsChange = useCallback(async (newSettings) => {
+    setSettings(newSettings);
+    // Sauvegarder dans Electron
+    if (window?.electronAPI?.saveSettings) {
+      await window.electronAPI.saveSettings(newSettings);
+    }
+  }, []);
+
+  // 🎵 Hook de gestion de la musique (DOIT être avant handleLaunchGame)
+  const music = useBackgroundMusic(settings, handleSettingsChange);
+
   // 🔄 Abonnement aux mises à jour (events envoyés par main via preload)
   useEffect(() => {
     if (!window?.electronAPI?.onUpdateStatus) return;
@@ -423,18 +435,6 @@ export default function App() {
   // 🎨 Récupérer le thème actuel
   const currentTheme = getTheme(settings.theme);
 
-  // ⚙️ Gestionnaire de changement des paramètres
-  const handleSettingsChange = useCallback(async (newSettings) => {
-    setSettings(newSettings);
-    // Sauvegarder dans Electron
-    if (window?.electronAPI?.saveSettings) {
-      await window.electronAPI.saveSettings(newSettings);
-    }
-  }, []);
-
-  // 🎵 Hook de gestion de la musique
-  const music = useBackgroundMusic(settings, handleSettingsChange);
-
   // 🚫 Ref pour empêcher les changements de catégorie concurrents
   const isChangingCategoryRef = useRef(false);
 
@@ -644,19 +644,7 @@ export default function App() {
               <GameGrid
                 games={filteredGames}
                 theme={settings.theme}
-                onLaunch={async (game) => {
-                  try {
-                    const result = await window.electronAPI.launchGame(game);
-                    if (result.success) {
-                      showToast(`🚀 ${game.name} lancé !`, "#28a745");
-                    } else {
-                      showToast(`❌ Erreur : ${result.error}`, "#dc3545");
-                    }
-                  } catch (err) {
-                    console.error("Erreur lancement jeu:", err);
-                    showToast(`❌ Erreur : ${err.message}`, "#dc3545");
-                  }
-                }}
+                onLaunch={handleLaunchGame}
                 onDelete={(game) => {
                   setGames((prev) => prev.filter((g) => g.id !== game.id));
                   showToast("🗑️ Jeu supprimé", "#dc3545");
