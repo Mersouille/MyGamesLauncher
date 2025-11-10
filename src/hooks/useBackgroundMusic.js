@@ -52,20 +52,37 @@ export function useBackgroundMusic(settings = {}, onSettingsChange) {
     };
   }, [getRandomTrack]);
 
-  // Charger et démarrer la musique si activée dans les settings
+  // Charger la piste actuelle quand elle change
   useEffect(() => {
-    if (settings.musicEnabled && audioRef.current) {
+    if (audioRef.current && currentTrack) {
       const track = tracks.find((t) => t.id === currentTrack) || tracks[0];
+      const wasPlaying = !audioRef.current.paused;
+
       audioRef.current.src = track.file;
+
+      // Rejouer automatiquement si la musique était en cours
+      if (wasPlaying || settings.musicEnabled) {
+        audioRef.current.play().catch((err) => {
+          console.warn("⚠️ Impossible de lancer la musique:", err);
+        });
+      }
+    }
+  }, [currentTrack]);
+
+  // Gérer l'activation/désactivation de la musique
+  useEffect(() => {
+    if (!audioRef.current) return;
+
+    if (settings.musicEnabled && audioRef.current.paused) {
       audioRef.current.play().catch((err) => {
         console.warn("⚠️ Impossible de lancer la musique automatiquement:", err);
       });
       setIsPlaying(true);
-    } else if (!settings.musicEnabled && audioRef.current) {
+    } else if (!settings.musicEnabled && !audioRef.current.paused) {
       audioRef.current.pause();
       setIsPlaying(false);
     }
-  }, [settings.musicEnabled, currentTrack]);
+  }, [settings.musicEnabled]);
 
   // Jouer
   const play = useCallback(() => {
