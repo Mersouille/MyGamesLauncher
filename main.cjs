@@ -1444,8 +1444,12 @@ app.whenReady().then(() => {
 
   // 🧩 Ensuite on enregistre le protocole et on crée la fenêtre
   registerLocalProtocol();
-  createWindow();
-  createAppMenu(currentLang);
+
+  // ⏱️ Créer la fenêtre principale avec un petit délai pour laisser le splash visible
+  setTimeout(() => {
+    createWindow();
+    createAppMenu(currentLang);
+  }, 1000); // Délai minimal pour voir le splash
 
   // 🔍 Vérifie où Electron enregistre ses données
   console.log("📂 Dossier userData :", app.getPath("userData"));
