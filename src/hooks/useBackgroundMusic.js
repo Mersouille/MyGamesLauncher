@@ -9,6 +9,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 export function useBackgroundMusic(settings = {}, onSettingsChange) {
   const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const isLoadingRef = useRef(false); // 🔒 Flag pour éviter les doubles play()
 
   // Liste des pistes disponibles (à placer dans public/music/)
   const tracks = [
@@ -54,24 +55,32 @@ export function useBackgroundMusic(settings = {}, onSettingsChange) {
 
   // Charger la piste actuelle quand elle change
   useEffect(() => {
-    if (audioRef.current && currentTrack) {
+    if (audioRef.current && currentTrack && !isLoadingRef.current) {
       const track = tracks.find((t) => t.id === currentTrack) || tracks[0];
       const wasPlaying = !audioRef.current.paused;
 
+      isLoadingRef.current = true; // 🔒 Verrouiller
       audioRef.current.src = track.file;
 
       // Rejouer automatiquement si la musique était en cours
       if (wasPlaying || settings.musicEnabled) {
-        audioRef.current.play().catch((err) => {
-          console.warn("⚠️ Impossible de lancer la musique:", err);
-        });
+        audioRef.current
+          .play()
+          .catch((err) => {
+            console.warn("⚠️ Impossible de lancer la musique:", err);
+          })
+          .finally(() => {
+            isLoadingRef.current = false; // 🔓 Déverrouiller
+          });
+      } else {
+        isLoadingRef.current = false; // 🔓 Déverrouiller immédiatement si pas de play
       }
     }
   }, [currentTrack]);
 
   // Gérer l'activation/désactivation de la musique
   useEffect(() => {
-    if (!audioRef.current) return;
+    if (!audioRef.current || isLoadingRef.current) return; // ⏭️ Skip si déjà en chargement
 
     if (settings.musicEnabled && audioRef.current.paused) {
       audioRef.current.play().catch((err) => {
