@@ -25,7 +25,7 @@ export default function App() {
   const [games, setGames] = useState([]);
   const [settings, setSettings] = useState({
     theme: "dark",
-    musicEnabled: false, // ❌ Désactivé par défaut (manuel via lecteur)
+    musicEnabled: true, // ✅ Activé par défaut - démarre automatiquement
     currentTrack: "track1",
     musicVolume: 0.3,
   });
@@ -906,7 +906,7 @@ export default function App() {
           onChangeTrack={music.changeTrack}
           onVolumeChange={music.changeVolume}
           volume={settings.musicVolume || 0.3}
-          currentTheme={settings.theme}
+          theme={getTheme(settings.theme)}
         />
       </div>
     </div>

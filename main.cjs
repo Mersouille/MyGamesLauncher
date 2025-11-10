@@ -205,6 +205,8 @@ function createWindow() {
       // Ajoute les politiques de sécurité recommandées
       webSecurity: true,
       allowRunningInsecureContent: false,
+      // ✅ Autorise l'autoplay audio (contourne la politique du navigateur)
+      autoplayPolicy: "no-user-gesture-required",
     },
   });
 
