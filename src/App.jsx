@@ -100,6 +100,12 @@ export default function App() {
   // � Lancer un jeu (réutilisable)
   const handleLaunchGame = async (game) => {
     try {
+      // 🎵 Arrêter la musique avant de lancer le jeu
+      if (music.isPlaying) {
+        music.pause();
+        console.log("🔇 Musique mise en pause pour le lancement du jeu");
+      }
+
       const result = await window.electronAPI.launchGame(game);
       if (result.success) {
         showToast(`🚀 ${game.name} lancé !`, "#28a745");

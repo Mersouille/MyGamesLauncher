@@ -55,28 +55,42 @@ export function useBackgroundMusic(settings = {}, onSettingsChange) {
 
   // Charger la piste actuelle quand elle change
   useEffect(() => {
-    if (audioRef.current && currentTrack && !isLoadingRef.current) {
+    if (audioRef.current && currentTrack) {
       const track = tracks.find((t) => t.id === currentTrack) || tracks[0];
       const wasPlaying = !audioRef.current.paused;
 
-      isLoadingRef.current = true; // 🔒 Verrouiller
-      audioRef.current.src = track.file;
+      // Attendre un court délai si déjà en chargement
+      const loadTrack = () => {
+        isLoadingRef.current = true; // 🔒 Verrouiller
+        audioRef.current.src = track.file;
 
-      // Rejouer automatiquement si la musique était en cours
-      if (wasPlaying || settings.musicEnabled) {
-        audioRef.current
-          .play()
-          .catch((err) => {
-            console.warn("⚠️ Impossible de lancer la musique:", err);
-          })
-          .finally(() => {
-            isLoadingRef.current = false; // 🔓 Déverrouiller
-          });
+        // Rejouer automatiquement si la musique était en cours
+        if (wasPlaying || settings.musicEnabled) {
+          audioRef.current
+            .play()
+            .then(() => {
+              setIsPlaying(true);
+              console.log("▶️ Lecture:", track.name);
+            })
+            .catch((err) => {
+              console.warn("⚠️ Impossible de lancer la musique:", err);
+            })
+            .finally(() => {
+              isLoadingRef.current = false; // 🔓 Déverrouiller
+            });
+        } else {
+          isLoadingRef.current = false; // 🔓 Déverrouiller immédiatement si pas de play
+        }
+      };
+
+      if (isLoadingRef.current) {
+        // Si déjà en chargement, attendre 100ms puis charger
+        setTimeout(loadTrack, 100);
       } else {
-        isLoadingRef.current = false; // 🔓 Déverrouiller immédiatement si pas de play
+        loadTrack();
       }
     }
-  }, [currentTrack]);
+  }, [currentTrack, settings.musicEnabled]);
 
   // Gérer l'activation/désactivation de la musique
   useEffect(() => {
