@@ -13,6 +13,8 @@ import AchievementNotification from "./components/Achievements/AchievementNotifi
 import ControllerProfilesManager from "./components/Controllers/ControllerProfilesManager"; // 🎮 Gestionnaire de profils de contrôleurs
 import ThemeSelector from "./components/Settings/ThemeSelector"; // 🎨 Sélecteur rapide de thème
 import BigPictureMode from "./components/BigPicture/BigPictureMode"; // 📺 Mode Big Picture
+import MusicPlayer from "./components/MusicPlayer"; // 🎵 Lecteur de musique
+import { useBackgroundMusic } from "./hooks/useBackgroundMusic"; // 🎵 Hook musique
 import { motion, AnimatePresence } from "framer-motion";
 import Sidebar from "./components/Sidebar"; // 🆕 Import du menu latéral
 import categories from "./data/categories.js";
@@ -21,7 +23,12 @@ import useAchievements from "./hooks/useAchievements"; // 🏆 Hook achievements
 
 export default function App() {
   const [games, setGames] = useState([]);
-  const [settings, setSettings] = useState({ theme: "dark" });
+  const [settings, setSettings] = useState({
+    theme: "dark",
+    musicEnabled: false,
+    currentTrack: "track1",
+    musicVolume: 0.3,
+  });
   const [isBigPicture, setIsBigPicture] = useState(false); // 📺 Etat Big Picture
   const [showSettings, setShowSettings] = useState(false);
   const [currentCategory, setCurrentCategory] = useState("Tous les jeux"); // 🆕 État catégorie
@@ -417,6 +424,9 @@ export default function App() {
       await window.electronAPI.saveSettings(newSettings);
     }
   }, []);
+
+  // 🎵 Hook de gestion de la musique
+  const music = useBackgroundMusic(settings, handleSettingsChange);
 
   // 🚫 Ref pour empêcher les changements de catégorie concurrents
   const isChangingCategoryRef = useRef(false);
@@ -884,6 +894,19 @@ export default function App() {
             onClose={() => setCurrentAchievementNotification(null)}
           />
         )}
+
+        {/* 🎵 Lecteur de musique flottant */}
+        <MusicPlayer
+          isPlaying={music.isPlaying}
+          currentTrack={music.currentTrack}
+          tracks={music.tracks}
+          onPlay={music.play}
+          onPause={music.pause}
+          onChangeTrack={music.changeTrack}
+          onVolumeChange={music.changeVolume}
+          volume={settings.musicVolume || 0.3}
+          theme={currentTheme}
+        />
       </div>
     </div>
   );
