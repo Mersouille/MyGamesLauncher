@@ -1,0 +1,84 @@
+{
+  "name": "mygames-launcher",
+  "version": "1.8.0",
+  "description": "Un launcher de jeux moderne avec Electron et React.",
+  "main": "main.cjs",
+  "type": "module",
+  "scripts": {
+    "start-react": "vite --port 5174",
+    "build-react": "vite build",
+    "start-electron": "set NODE_ENV=production && electron ./main.cjs",
+    "start": "concurrently \"npm run start-react\" \"wait-on http://localhost:5174 && electron ./main.cjs\"",
+    "check-build": "node scripts/check-build.cjs",
+    "build-electron": "npm run check-build && npm run build-react && set NODE_ENV=production && electron-builder",
+    "electron": "electron ."
+  },
+  "build": {
+    "appId": "com.mygames.launcher",
+    "productName": "MyGames Launcher",
+    "directories": {
+      "buildResources": "assets",
+      "output": "dist-electron"
+    },
+    "files": [
+      "main.cjs",
+      "preload.cjs",
+      "package.json",
+      {
+        "from": "dist-react",
+        "to": "dist-react",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "extraResources": [
+      {
+        "from": "dist-react/icons",
+        "to": "icons"
+      },
+      {
+        "from": "dist-react",
+        "to": "dist-react"
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Mersouille",
+        "repo": "MyGamesLauncher"
+      }
+    ],
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    }
+  },
+  "dependencies": {
+    "auto-launch": "^5.0.6",
+    "axios": "^1.13.2",
+    "electron-store": "^8.1.0",
+    "electron-updater": "^6.6.2",
+    "framer-motion": "^12.23.24",
+    "node-fetch": "^3.3.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.2",
+    "autoprefixer": "^10.4.21",
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "electron": "^30.5.1",
+    "electron-builder": "^24.13.3",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.14",
+    "vite": "^5.4.11",
+    "wait-on": "^7.2.0"
+  }
+}

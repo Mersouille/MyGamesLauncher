@@ -1,0 +1,146 @@
+[
+  {
+    "id": 1,
+    "name": "Tekken 8",
+    "exePath": "C:\\Games\\Tekken-8\\Tekken-8",
+    "icon": "Tekken 8.jpg",
+    "category": "Combat",
+    "lastPlayed": "2025-10-20T15:23:00"
+  },
+  {
+    "id": 2,
+    "name": "Cyberpunk 2077",
+    "exePath": "C:\\Games\\Cyberpunk2077\\bin\\x64\\Cyberpunk2077.exe",
+    "icon": "Cyberpunk 2077.jpg",
+    "category": "Tir (FPS)",
+    "lastPlayed": "2025-10-24T18:42:00"
+  },
+  {
+    "id": 3,
+    "name": "Elden Ring",
+    "exePath": "C:\\Games\\EldenRing\\eldenring.exe",
+    "icon": "Elden Ring.jpg",
+    "category": "Action / Aventure",
+    "lastPlayed": "2025-10-22T21:10:00"
+  },
+  {
+    "id": 4,
+    "name": "Forza Horizon 5",
+    "exePath": "C:\\Games\\ForzaHorizon5\\ForzaHorizon5.exe",
+    "icon": "Forza Horizon 5.jpg",
+    "category": "Course",
+    "lastPlayed": "2025-10-18T12:33:00"
+  },
+  {
+    "id": 5,
+    "name": "The Crew 2",
+    "exePath": "C:\\Games\\The-Crew-2\\The-Crew-2.exe",
+    "icon": "The Crew 2.jpg",
+    "category": "Course",
+    "lastPlayed": "2025-10-26T09:15:00"
+  },
+  {
+    "id": 6,
+    "name": "Alan Wake 2",
+    "exePath": "C:\\Games\\Alan Wake 2\\AlanWake2.exe",
+    "icon": "Alan Wake 2.jpg",
+    "category": "Horreur",
+    "lastPlayed": "2025-10-29T22:38:00"
+  },
+  {
+    "id": 7,
+    "name": "Dead Rising Deluxe Remaster",
+    "exePath": "C:\\Games\\Dead Rising Deluxe Remaster\\DeadRisingDeluxeRemaster.exe",
+    "icon": "Dead Rising Deluxe Remaster.jpg",
+    "category": "Horreur",
+    "lastPlayed": "2025-10-29T22:38:00"
+  },
+  {
+    "id": 8,
+    "name": "Destroy All Humans!",
+    "exePath": "C:\\Games\\Destroy-All-Humans\\Destroy-All-Humans.exe",
+    "icon": "Destroy All Humans!.jpg",
+    "category": "Action / Aventure",
+    "lastPlayed": "2025-10-29T22:38:00"
+  },
+  {
+    "id": 9,
+    "name": "Dying Light The Beast",
+    "exePath": "C:\\Games\\Dying-Light-The-Beast\\Dying-Light-The-Beast.exe",
+    "icon": "Dying Light The Beast.jpg",
+    "category": "Horreur",
+    "lastPlayed": "2025-10-29T22:38:00"
+  },
+  {
+    "id": 10,
+    "name": "Silent Hill 2 Remake",
+    "exePath": "C:\\Games\\Silent-Hill-2-Remake\\Silent-Hill-2-Remake.exe",
+    "icon": "Silent Hill 2 Remake.jpg",
+    "category": "Horreur",
+    "lastPlayed": "2025-10-29T22:38:00"
+  },
+  {
+    "id": 11,
+    "name": "Final Fantasy VII Rebirth",
+    "exePath": "C:\\Games\\Final-Fantasy-VII-Rebirth\\Final-Fantasy-VII-Rebirth.exe",
+    "icon": "Final Fantasy VII Rebirth.jpg",
+    "category": "Rôle (RPG)",
+    "lastPlayed": "2025-10-29T22:38:00"
+  },
+  {
+    "id": 12,
+    "name": "Final Fantasy VII Remake Intergrade",
+    "exePath": "C:\\Games\\Final-Fantasy-VII-Remake-Intergrade\\Final-Fantasy-VII-Remake-Intergrade.exe",
+    "icon": "Final Fantasy VII Remake Intergrade.jpg",
+    "category": "Rôle (RPG)",
+    "lastPlayed": "2025-10-29T22:38:00"
+  },
+  {
+    "id": 13,
+    "name": "God of War Ragnarok",
+    "exePath": "C:\\Games\\God-of-War-Ragnarok\\God-of-War-Ragnarok.exe",
+    "icon": "God of War Ragnarok.jpg",
+    "category": "Action / Aventure",
+    "lastPlayed": "2025-10-29T22:38:00"
+  },
+  {
+    "id": 14,
+    "name": "Marvel's Spider-Man 2",
+    "exePath": "C:\\Games\\Marvel's-SpiderMan-2\\Marvel's-SpiderMan-2.exe",
+    "icon": "Marvel's Spider-Man 2.jpg",
+    "category": "Action / Aventure",
+    "lastPlayed": "2025-10-29T22:38:00"
+  },
+  {
+    "id": 15,
+    "name": "Marvel's Spider-Man Remastered",
+    "exePath": "C:\\Games\\Marvel's-SpiderMan-Remastered\\Marvel's-SpiderMan-Remastered.exe",
+    "icon": "Marvel's Spider-Man Remastered.jpg",
+    "category": "Action / Aventure",
+    "lastPlayed": "2025-10-29T22:38:00"
+  },
+  {
+    "id": 16,
+    "name": "Microsoft Flight Simulator",
+    "exePath": "C:\\Games\\Microsoft-Flight-Simulator\\Microsoft-Flight-Simulator.exe",
+    "icon": "Microsoft Flight Simulator.jpg",
+    "category": "Simulation",
+    "lastPlayed": "2025-10-29T22:38:00"
+  },
+  {
+    "id": 17,
+    "name": "Mortal Kombat 1",
+    "exePath": "C:\\Games\\Mortal-Kombat-1\\Mortal-Kombat-1.exe",
+    "icon": "Mortal Kombat 1.jpg",
+    "category": "Combat",
+    "lastPlayed": "2025-10-29T22:38:00"
+  },
+  {
+    "id": 18,
+    "name": "Red Dead Redemption II",
+    "exePath": "C:\\Games\\Read-Dead-Redemption-2\\Read-Dead-Redemption-2.exe",
+    "icon": "Red Dead Redemption II.jpg",
+    "category": "Action / Aventure",
+    "lastPlayed": "2025-10-29T22:38:00"
+  }
+]

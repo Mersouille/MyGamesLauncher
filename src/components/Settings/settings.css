@@ -1,0 +1,47 @@
+.settings-page {
+  min-height: 100vh;
+  padding: 20px;
+  color: #fff;
+  background-color: #111827;
+}
+
+.settings-menu {
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.setting-item {
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.setting-item select {
+  background: #1f2937;
+  color: #fff;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 5px;
+}
+
+.settings-page.dark {
+  background-color: #111827;
+  color: white;
+}
+
+.settings-page.light {
+  background-color: #f3f4f6;
+  color: black;
+}
+.setting-item label {
+  color: var(--text-color);
+}
+
+.setting-item select {
+  transition: all 0.2s ease;
+}
+
+.setting-item select:hover {
+  border-color: var(--btn-bg);
+}

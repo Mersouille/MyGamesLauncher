@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- 🧠 Titre et description -->
+    <title>MyGames Launcher</title>
+    <meta
+      name="description"
+      content="Lanceur de jeux MyGames - Gérez et lancez vos jeux facilement"
+    />
+
+    <!-- 🧩 Icônes -->
+    <link rel="icon" type="image/png" href="/icon.png" />
+    <link rel="apple-touch-icon" href="/icon.png" />
+
+    <!-- 🎨 Styles -->
+    <link rel="stylesheet" href="/src/styles/index.css" />
+
+    <!-- ⚡️ Sécurité CSP pour Electron (configuration sécurisée) -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self' local:;
+               script-src 'self' 'unsafe-inline' 'unsafe-eval';
+               style-src 'self' 'unsafe-inline';
+               img-src 'self' data: local: file: blob: https:;
+               connect-src 'self' ws://localhost:* http://localhost:* https://www.steamgriddb.com local:;
+               font-src 'self' data:;"
+    />
+
+    <!-- 🧩 Préchargement (performance) -->
+    <link rel="modulepreload" href="/src/main.jsx" />
+  </head>
+
+  <body class="font-sans bg-[#1b2838] text-gray-100 min-h-screen flex flex-col select-none">
+    <!-- === Splash screen === -->
+    <div
+      id="splash-screen"
+      class="flex flex-col items-center justify-center h-screen bg-[#1b2838] text-blue-400 text-lg"
+    >
+      <img src="/icon.png" alt="Logo MyGames" class="w-20 h-20 mb-4 animate-pulse" />
+      <p>Chargement...</p>
+    </div>
+
+    <!-- === Racine React === -->
+    <div id="root" style="display: none"></div>
+
+    <!-- === Script principal React/Vite === -->
+    <script type="module" src="/src/main.jsx"></script>
+
+    <!-- === Script de gestion du splash screen === -->
+    <script>
+      window.addEventListener("DOMContentLoaded", () => {
+        const splash = document.getElementById("splash-screen");
+        const root = document.getElementById("root");
+        setTimeout(() => {
+          splash.style.display = "none";
+          root.style.display = "block";
+        }, 800);
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,291 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* === Thème personnalisé === */
+@layer base {
+  :root {
+    --color-accent: #4f46e5; /* Indigo 600 */
+  }
+
+  body {
+    @apply bg-gray-900 text-gray-100;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg transition duration-200;
+  }
+
+  .card {
+    @apply bg-gray-800 p-4 rounded-2xl shadow-lg border border-gray-700;
+  }
+}
+
+/* Mode clair */
+body.light {
+  --bg-color: #f3f4f6;
+  --text-color: #1f2937;
+  --card-bg: #ffffff;
+  --btn-bg: #e5e7eb;
+}
+
+/* Mode sombre */
+body.dark {
+  --bg-color: #1b2838;
+  --text-color: #e5e7eb;
+  --card-bg: #2a475e;
+  --btn-bg: #3b82f6;
+}
+
+/* Appliquer les variables */
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+.header {
+  position: relative;
+}
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  transition: background 0.5s ease;
+}
+
+.app {
+  background-size: 200% 200%;
+  animation: backgroundFlow 30s ease infinite;
+}
+
+@keyframes backgroundFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* === Flip stable sans texte inversé (Electron safe) === */
+
+.flip-container {
+  position: relative;
+  perspective: none;
+  overflow: visible;
+}
+
+.flip-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.6s ease, opacity 0.6s ease;
+}
+
+/* Faces */
+.flip-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  backface-visibility: visible;
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+/* Avant visible */
+.flip-front {
+  opacity: 1;
+  transform: scale(1);
+  z-index: 2;
+}
+
+/* Arrière invisible */
+.flip-back {
+  opacity: 0;
+  transform: scale(0.95);
+  z-index: 1;
+}
+
+/* Effet de flip */
+.flip-container:hover .flip-front {
+  opacity: 0;
+  transform: scale(1.05);
+}
+
+.flip-container:hover .flip-back {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Petit effet de relief au survol */
+.flip-container:hover {
+  filter: drop-shadow(0 0 12px rgba(0, 140, 255, 0.3));
+}
+
+/* Apparition fluide des cartes */
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.game-card {
+  animation: fadeInUp 0.6s ease forwards;
+  opacity: 1;
+}
+
+/* Surbrillance lumineuse au survol */
+.game-card:hover .flip-face {
+  box-shadow: 0 0 25px rgba(100, 200, 255, 0.4), 0 0 50px rgba(120, 80, 255, 0.3);
+  transform: translateY(-2px) scale(1.02);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.game-card:hover img {
+  filter: brightness(1.1);
+}
+
+.game-card {
+  animation: fadeInUp 0.5s ease both;
+}
+
+/* Décalage progressif pour effet de cascade */
+.game-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.game-card:nth-child(2) {
+  animation-delay: 0.1s;
+}
+.game-card:nth-child(3) {
+  animation-delay: 0.1s;
+}
+.game-card:nth-child(4) {
+  animation-delay: 0.1s;
+}
+.game-card:nth-child(5) {
+  animation-delay: 0.1s;
+}
+.game-card:nth-child(6) {
+  animation-delay: 0.1s;
+}
+.game-card:nth-child(7) {
+  animation-delay: 0.1s;
+}
+.game-card:nth-child(8) {
+  animation-delay: 0.1s;
+}
+.game-card:nth-child(9) {
+  animation-delay: 0.1s;
+}
+.game-card:nth-child(10) {
+  animation-delay: 0.1s;
+}
+.game-card:nth-child(11) {
+  animation-delay: 0.1s;
+}
+.game-card:nth-child(12) {
+  animation-delay: 0.1s;
+}
+.game-card:nth-child(13) {
+  animation-delay: 0.1s;
+}
+.game-card:nth-child(14) {
+  animation-delay: 0.1s;
+}
+.game-card:nth-child(15) {
+  animation-delay: 0.1s;
+}
+.game-card:nth-child(16) {
+  animation-delay: 0.1s;
+}
+.game-card:nth-child(17) {
+  animation-delay: 0.1s;
+}
+.game-card:nth-child(18) {
+  animation-delay: 0.1s;
+}
+
+/* === Effet halo néon respirant (survol fluide) === */
+
+@keyframes neonPulse {
+  0% {
+    box-shadow: 0 0 10px rgba(0, 140, 255, 0.3), 0 0 20px rgba(0, 140, 255, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(0, 180, 255, 0.6), 0 0 50px rgba(0, 120, 255, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 10px rgba(0, 140, 255, 0.3), 0 0 20px rgba(0, 140, 255, 0.2);
+  }
+}
+
+.game-card:hover .flip-face {
+  animation: neonPulse 2s infinite ease-in-out;
+  transform: scale(1.03);
+}
+
+/* === Halo bleu autour des jaquettes (version sans flip) === */
+.game-card {
+  position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.game-card:hover {
+  box-shadow: 0 0 25px rgba(0, 140, 255, 0.4), 0 0 50px rgba(120, 80, 255, 0.3);
+  transform: scale(1.05);
+  animation: neonPulse 2s infinite ease-in-out;
+}
+
+/* === Animation respirante du halo bleu === */
+@keyframes neonPulse {
+  0% {
+    box-shadow: 0 0 10px rgba(0, 140, 255, 0.3), 0 0 20px rgba(0, 140, 255, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(0, 180, 255, 0.6), 0 0 50px rgba(0, 120, 255, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 10px rgba(0, 140, 255, 0.3), 0 0 20px rgba(0, 140, 255, 0.2);
+  }
+}
+/* === Halo bleu autour des jaquettes (version sans flip) === */
+.game-card {
+  position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.game-card:hover {
+  box-shadow: 0 0 25px rgba(0, 140, 255, 0.4), 0 0 50px rgba(120, 80, 255, 0.3);
+  transform: scale(1.05);
+  animation: neonPulse 2s infinite ease-in-out;
+}
+
+/* === Animation respirante du halo bleu === */
+@keyframes neonPulse {
+  0% {
+    box-shadow: 0 0 10px rgba(0, 140, 255, 0.3), 0 0 20px rgba(0, 140, 255, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(0, 180, 255, 0.6), 0 0 50px rgba(0, 120, 255, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 10px rgba(0, 140, 255, 0.3), 0 0 20px rgba(0, 140, 255, 0.2);
+  }
+}
+.game-card img {
+  background-color: rgba(20, 20, 20, 0.5);
+  border-radius: 12px;
+}
