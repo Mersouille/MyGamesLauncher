@@ -15,6 +15,7 @@ Les pistes doivent être nommées comme défini dans `src/hooks/useBackgroundMus
 - `track1.mp3`
 - `track2.mp3`
 - `track3.mp3`
+- `track4.mp3`
 
 Tu peux en ajouter plus en modifiant le tableau `tracks` dans le hook.
 
@@ -41,7 +42,7 @@ const tracks = [
   { id: "track1", name: "Ambiance 1", file: "music/track1.mp3" },
   { id: "track2", name: "Ambiance 2", file: "music/track2.mp3" },
   { id: "track3", name: "Ambiance 3", file: "music/track3.mp3" },
-  { id: "track4", name: "Epic", file: "music/track4.mp3" }, // nouvelle piste
+  { id: "track4", name: "Ambiance 4", file: "music/track4.mp3" }, // nouvelle piste
 ];
 ```
 

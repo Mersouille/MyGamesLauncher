@@ -9,25 +9,38 @@ import { useState, useEffect, useRef, useCallback } from "react";
 export function useBackgroundMusic(settings = {}, onSettingsChange) {
   const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTrack, setCurrentTrack] = useState(settings.currentTrack || "track1");
 
   // Liste des pistes disponibles (à placer dans public/music/)
   const tracks = [
     { id: "track1", name: "Ambiance 1", file: "music/track1.mp3" },
     { id: "track2", name: "Ambiance 2", file: "music/track2.mp3" },
     { id: "track3", name: "Ambiance 3", file: "music/track3.mp3" },
+    { id: "track4", name: "Ambiance 4", file: "music/track4.mp3" },
   ];
+
+  // Fonction pour obtenir une piste aléatoire
+  const getRandomTrack = useCallback(() => {
+    const randomIndex = Math.floor(Math.random() * tracks.length);
+    return tracks[randomIndex].id;
+  }, []);
+
+  // État initial : piste aléatoire si pas définie
+  const [currentTrack, setCurrentTrack] = useState(() => {
+    return settings.currentTrack || getRandomTrack();
+  });
 
   // Initialiser l'audio au montage
   useEffect(() => {
     if (!audioRef.current) {
       audioRef.current = new Audio();
-      audioRef.current.loop = true;
+      audioRef.current.loop = false; // Désactiver loop pour changement auto
       audioRef.current.volume = settings.musicVolume || 0.3;
 
-      // Événement de fin de piste (si pas en loop)
+      // Événement de fin de piste : passer à une piste aléatoire
       audioRef.current.addEventListener("ended", () => {
-        setIsPlaying(false);
+        const nextRandomTrack = getRandomTrack();
+        setCurrentTrack(nextRandomTrack);
+        console.log("🎵 Changement automatique vers:", nextRandomTrack);
       });
     }
 
@@ -37,7 +50,7 @@ export function useBackgroundMusic(settings = {}, onSettingsChange) {
         audioRef.current = null;
       }
     };
-  }, []);
+  }, [getRandomTrack]);
 
   // Charger et démarrer la musique si activée dans les settings
   useEffect(() => {
