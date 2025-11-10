@@ -115,37 +115,25 @@ function createSplashScreen() {
   // HTML inline pour l'écran de chargement
   const splashHTML = `
     <!DOCTYPE html>
-        {
-          label: isFrench ? "Rechercher des mises à jour" : "Check for Updates",
-          click: () => {
-            try {
-              if (!app.isPackaged) {
-                dialog.showMessageBox({
-                  type: "info",
-                  title: isFrench ? "Mises à jour" : "Updates",
-                  message: isFrench
-                    ? "Les mises à jour automatiques fonctionnent uniquement avec l'application installée (packagée).\n\nConstruisez l'installateur puis relancez depuis la version installée pour tester."
-                    : "Auto-updates only work with the packaged (installed) app.\n\nBuild the installer and run the installed version to test.",
-                });
-                return;
-              }
-              win?.webContents.send("update-status", { status: "manual-check" });
-              autoUpdater.checkForUpdatesAndNotify().catch((e) => {
-                dialog.showErrorBox(
-                  isFrench ? "Mise à jour" : "Update",
-                  (isFrench ? "Erreur de vérification : " : "Check failed: ") + (e?.message || String(e))
-                );
-              });
-            } catch (e) {
-              dialog.showErrorBox(
-                isFrench ? "Mise à jour" : "Update",
-                (isFrench ? "Erreur : " : "Error: ") + (e?.message || String(e))
-              );
-            }
-          },
-        },
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body {
+          margin: 0;
+          padding: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 100vh;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          font-family: 'Segoe UI', Tahoma, sans-serif;
+          color: white;
           overflow: hidden;
           border-radius: 12px;
+        }
+        .container {
+          text-align: center;
         }
         .logo {
           font-size: 48px;

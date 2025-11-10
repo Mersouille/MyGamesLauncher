@@ -25,7 +25,7 @@ export default function App() {
   const [games, setGames] = useState([]);
   const [settings, setSettings] = useState({
     theme: "dark",
-    musicEnabled: true, // ✅ Activé par défaut
+    musicEnabled: false, // ❌ Désactivé par défaut (manuel via lecteur)
     currentTrack: "track1",
     musicVolume: 0.3,
   });
@@ -73,8 +73,6 @@ export default function App() {
   // � Gestion des notifications toast
   const [toast, setToast] = useState({ visible: false, text: "", color: "#0d6efd" });
 
-  // 🎵 État pour l'initialisation de la musique (autoplay policy)
-  const [musicInitialized, setMusicInitialized] = useState(false);
   // 🔄 État de mise à jour (autoUpdater)
   const [updateStatus, setUpdateStatus] = useState({ status: null, info: null, progress: null });
 
@@ -910,47 +908,6 @@ export default function App() {
           volume={settings.musicVolume || 0.3}
           currentTheme={settings.theme}
         />
-
-        {/* 🎵 Overlay d'initialisation de la musique (autoplay policy) */}
-        {!musicInitialized && settings.musicEnabled && (
-          <div
-            onClick={() => {
-              setMusicInitialized(true);
-              music.play();
-            }}
-            style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: "rgba(0, 0, 0, 0.8)",
-              backdropFilter: "blur(10px)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              zIndex: 99999,
-              cursor: "pointer",
-              animation: "fadeIn 0.3s ease-in-out",
-            }}
-          >
-            <div
-              style={{
-                textAlign: "center",
-                color: "white",
-                animation: "pulse 2s ease-in-out infinite",
-              }}
-            >
-              <div style={{ fontSize: "4rem", marginBottom: "1rem" }}>🎵</div>
-              <div style={{ fontSize: "1.5rem", fontWeight: "600", marginBottom: "0.5rem" }}>
-                Cliquez n'importe où
-              </div>
-              <div style={{ fontSize: "1rem", opacity: 0.7 }}>
-                pour démarrer la musique d'ambiance
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
