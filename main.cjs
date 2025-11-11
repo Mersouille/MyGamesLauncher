@@ -202,8 +202,9 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,
-      // Ajoute les politiques de sécurité recommandées
-      webSecurity: true,
+      // ⚠️ webSecurity désactivé pour éviter les problèmes de CSP avec Vite
+      // L'application locale n'a pas besoin de ces protections (pas de contenu externe)
+      webSecurity: false,
       allowRunningInsecureContent: false,
       // ✅ Autorise l'autoplay audio (contourne la politique du navigateur)
       autoplayPolicy: "no-user-gesture-required",
