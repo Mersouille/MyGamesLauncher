@@ -36,18 +36,36 @@ const GameGrid = ({
   const sortedGamesRef = useRef(sortedGames);
   const onLaunchRef = useRef(onLaunch);
   const onToggleFavoriteRef = useRef(onToggleFavorite);
+  const selectedIndexRef = useRef(selectedIndex); // 🎮 Ref pour l'index sélectionné
+  const isModalOpenRef = useRef(isModalOpen); // 🎮 Ref pour éviter les cycles infinis
 
   // Mettre à jour les refs directement pendant le render
   sortedGamesRef.current = sortedGames;
   onLaunchRef.current = onLaunch;
   onToggleFavoriteRef.current = onToggleFavorite;
+  selectedIndexRef.current = selectedIndex; // 🎮 Toujours à jour
+  isModalOpenRef.current = isModalOpen; // 🎮 Toujours à jour
 
   // 🎮 Gestion de la navigation avec manette
   useEffect(() => {
-    if (!gamepadConnected || modalOpen || isModalOpen) {
+    console.log(
+      "🎮 [GameGrid] useEffect navigation - gamepadConnected:",
+      gamepadConnected,
+      "modalOpen:",
+      modalOpen
+    );
+
+    if (!gamepadConnected) {
+      console.log("⚠️ [GameGrid] Listener NON enregistré - manette non connectée");
       return;
     }
 
+    if (modalOpen) {
+      console.log("⚠️ [GameGrid] Listener NON enregistré - modal interne ouvert");
+      return;
+    }
+
+    console.log("✅ [GameGrid] Enregistrement du listener de navigation");
     const unregister = registerListener(
       {
         // Navigation horizontale (stick gauche)
@@ -72,23 +90,49 @@ const GameGrid = ({
         },
         // Bouton A = Lancer le jeu sélectionné
         onA: () => {
-          setSelectedIndex((currentIndex) => {
-            const selectedGame = sortedGamesRef.current[currentIndex];
-            if (selectedGame && onLaunchRef.current) {
-              onLaunchRef.current(selectedGame);
-            }
-            return currentIndex;
-          });
+          // 🚨 Vérifier si un modal externe est ouvert
+          if (isModalOpenRef.current) {
+            console.log("⚠️ [GameGrid] Bouton A ignoré - modal externe ouvert");
+            return;
+          }
+
+          // 🎮 CRITIQUE: Ne PAS consommer si aucun jeu n'est affiché
+          // Cela permet à la Sidebar de gérer le bouton A pour changer de catégorie
+          const gamesCount = sortedGamesRef.current.length;
+          if (gamesCount === 0) {
+            console.log("⚠️ [GameGrid] Bouton A ignoré - aucun jeu affiché, laisser Sidebar gérer");
+            return; // Ne PAS consommer l'événement
+          }
+
+          const currentIndex = selectedIndexRef.current; // 🎮 Utiliser la ref au lieu de la closure
+          const selectedGame = sortedGamesRef.current[currentIndex];
+          console.log(
+            "🎮 [GameGrid] Bouton A pressé - Index:",
+            currentIndex,
+            "Jeu:",
+            selectedGame?.name
+          );
+          if (selectedGame && onLaunchRef.current) {
+            onLaunchRef.current(selectedGame);
+          } else {
+            console.warn("⚠️ [GameGrid] Aucun jeu sélectionné ou callback manquant");
+          }
         },
         // Bouton B = Toggle favori
         onB: () => {
-          setSelectedIndex((currentIndex) => {
-            const selectedGame = sortedGamesRef.current[currentIndex];
-            if (selectedGame && onToggleFavoriteRef.current) {
-              onToggleFavoriteRef.current(selectedGame);
-            }
-            return currentIndex;
-          });
+          const currentIndex = selectedIndexRef.current; // 🎮 Utiliser la ref au lieu de la closure
+          const selectedGame = sortedGamesRef.current[currentIndex];
+          console.log(
+            "⭐ [GameGrid] Bouton B pressé - Index:",
+            currentIndex,
+            "Jeu:",
+            selectedGame?.name
+          );
+          if (selectedGame && onToggleFavoriteRef.current) {
+            onToggleFavoriteRef.current(selectedGame);
+          } else {
+            console.warn("⚠️ [GameGrid] Aucun jeu sélectionné ou callback manquant");
+          }
         },
         // D-pad pour navigation précise
         onDPAD_LEFT: () => {
@@ -113,11 +157,14 @@ const GameGrid = ({
           });
         },
       },
-      0
-    ); // Priorité 0 (basse) pour la navigation de base
+      5
+    ); // 🎮 Priorité 5 (basse) - GameGrid ne consomme QUE si Sidebar n'a pas de callback onA
 
-    return unregister;
-  }, [gamepadConnected, modalOpen, isModalOpen, registerListener]);
+    return () => {
+      console.log("🗑️ [GameGrid] Désenregistrement du listener de navigation");
+      unregister();
+    };
+  }, [gamepadConnected, modalOpen, registerListener]); // ✅ Retiré isModalOpen des dépendances pour éviter les cycles infinis
 
   // 🎯 Scroll automatique vers le jeu sélectionné
   useEffect(() => {

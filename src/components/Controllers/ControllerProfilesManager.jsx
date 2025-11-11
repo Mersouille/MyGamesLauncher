@@ -46,7 +46,7 @@ const ControllerProfilesManager = ({
         },
       },
       100
-    ); // Priorité 100 (haute) pour fermer le modal
+    ); // Priorité 100 (haute) pour fermer le modal avec bouton B
 
     return unregister;
   }, [gamepadConnected, registerListener]);

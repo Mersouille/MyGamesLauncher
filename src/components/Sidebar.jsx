@@ -9,18 +9,28 @@ export default function Sidebar({
   collections = [],
   onManageCollections,
   onManageControllers,
+  onOpenStatistics,
+  onOpenAchievements,
   isModalOpen = false,
 }) {
   const { gamepadConnected, registerListener } = useGamepad();
 
   // Créer une liste complète de toutes les sections navigables
+  // 🎯 Ordre optimisé : "Tous les jeux" au milieu pour accès rapide aux deux côtés
   const allSections = React.useMemo(() => {
+    // Pages spéciales (accessibles avec LB depuis "Tous les jeux")
+    const specialPages = ["📊 Statistiques", "🏆 Achievements", "🎮 Contrôleurs"];
+    // Collections (après les pages spéciales)
+    const collectionsList = collections.map((c) => `collection:${c.id}`);
+    // Catégories de jeux (sans "Tous les jeux")
+    const gameCategories = categories.filter((c) => c !== "Tous les jeux");
+
+    // Assemblage : spéciales + collections + "Tous les jeux" (milieu) + autres catégories
     const sections = [
-      "📊 Statistiques",
-      "🏆 Achievements",
-      "🎮 Contrôleurs",
-      ...collections.map((c) => `collection:${c.id}`),
-      ...categories,
+      ...specialPages,
+      ...collectionsList,
+      "Tous les jeux", // Position centrale
+      ...gameCategories,
     ];
     return sections;
   }, [collections]);
@@ -35,6 +45,8 @@ export default function Sidebar({
   const allSectionsRef = useRef(allSections);
   const onSelectCategoryRef = useRef(onSelectCategory);
   const onManageControllersRef = useRef(onManageControllers);
+  const onOpenStatisticsRef = useRef(onOpenStatistics);
+  const onOpenAchievementsRef = useRef(onOpenAchievements);
   const currentCategoryRef = useRef(currentCategory);
 
   // 🚫 Bloquer les interactions pendant qu'on change de catégorie (utiliser ref au lieu de state)
@@ -48,6 +60,8 @@ export default function Sidebar({
   allSectionsRef.current = allSections;
   onSelectCategoryRef.current = onSelectCategory;
   onManageControllersRef.current = onManageControllers;
+  onOpenStatisticsRef.current = onOpenStatistics;
+  onOpenAchievementsRef.current = onOpenAchievements;
   currentCategoryRef.current = currentCategory;
 
   // 🎮 Navigation avec gâchettes LB/RB et D-pad
@@ -55,124 +69,160 @@ export default function Sidebar({
     console.log("🔄 [Sidebar] useEffect déclenché - gamepadConnected:", gamepadConnected);
     if (!gamepadConnected) return;
 
-    console.log("📝 [Sidebar] Enregistrement du listener (priorité 10)");
-    const unregister = registerListener(
-      {
-        // LB = Section précédente (navigation seulement) - désactivé si modal ouverte
-        onLB: () => {
-          if (isChangingCategoryRef.current) return; // Bloquer pendant le changement
-          const isModalPage =
-            currentCategoryRef.current === "📊 Statistiques" ||
-            currentCategoryRef.current === "🏆 Achievements" ||
-            currentCategoryRef.current === "🎮 Contrôleurs";
-          if (isModalPage) return; // Ignorer la navigation si modal ouverte
-          setSelectedIndex((prev) => Math.max(0, prev - 1));
-        },
-        // RB = Section suivante (navigation seulement) - désactivé si modal ouverte
-        onRB: () => {
-          if (isChangingCategoryRef.current) return; // Bloquer pendant le changement
-          const isModalPage =
-            currentCategoryRef.current === "📊 Statistiques" ||
-            currentCategoryRef.current === "🏆 Achievements" ||
-            currentCategoryRef.current === "🎮 Contrôleurs";
-          if (isModalPage) return; // Ignorer la navigation si modal ouverte
-          setSelectedIndex((prev) => Math.min(allSectionsRef.current.length - 1, prev + 1));
-        },
-        // D-pad haut = Section précédente (navigation seulement) - désactivé si modal ouverte
-        onDPAD_UP: () => {
-          if (isChangingCategoryRef.current) return; // Bloquer pendant le changement
-          const isModalPage =
-            currentCategoryRef.current === "📊 Statistiques" ||
-            currentCategoryRef.current === "🏆 Achievements" ||
-            currentCategoryRef.current === "🎮 Contrôleurs";
-          if (isModalPage) return; // Ignorer la navigation si modal ouverte
-          setSelectedIndex((prev) => Math.max(0, prev - 1));
-        },
-        // D-pad bas = Section suivante (navigation seulement) - désactivé si modal ouverte
-        onDPAD_DOWN: () => {
-          if (isChangingCategoryRef.current) return; // Bloquer pendant le changement
-          const isModalPage =
-            currentCategoryRef.current === "📊 Statistiques" ||
-            currentCategoryRef.current === "🏆 Achievements" ||
-            currentCategoryRef.current === "🎮 Contrôleurs";
-          if (isModalPage) return; // Ignorer la navigation si modal ouverte
-          setSelectedIndex((prev) => Math.min(allSectionsRef.current.length - 1, prev + 1));
-        },
-        // Bouton A = Ouvrir/Activer la section sélectionnée - désactivé si modal ouverte
-        onA: () => {
-          if (isChangingCategoryRef.current) return; // ⚠️ CRITIQUE: Ignorer si déjà en train de changer
+    // 🎯 Vérifier si on est dans une page modale
+    const isInModalPage = ["📊 Statistiques", "🏆 Achievements", "🎮 Contrôleurs"].includes(
+      currentCategory
+    );
 
-          // ⚠️ Si une modal est déjà ouverte, ignorer le bouton A
-          const isModalPage =
-            currentCategoryRef.current === "📊 Statistiques" ||
-            currentCategoryRef.current === "🏆 Achievements" ||
-            currentCategoryRef.current === "🎮 Contrôleurs";
-          if (isModalPage) {
-            console.log(
-              "⚠️ [Sidebar] Bouton A ignoré - modal déjà ouverte:",
-              currentCategoryRef.current
-            );
-            return;
-          }
+    console.log(
+      "📝 [Sidebar] Enregistrement du listener - isInModalPage:",
+      isInModalPage,
+      "currentCategory:",
+      currentCategory
+    );
 
-          const section = allSectionsRef.current[selectedIndexRef.current];
-          if (section) {
-            console.log("🎯 [Sidebar] Bouton A pressé - section:", section);
+    // 🚨 CRITIQUE: Construire l'objet callbacks conditionnellement
+    const callbacks = {
+      // LB = Catégorie précédente (changement immédiat)
+      onLB: () => {
+        if (isChangingCategoryRef.current) return;
+        const currentIndex = allSectionsRef.current.indexOf(currentCategoryRef.current);
+        const newIndex = Math.max(0, currentIndex - 1);
+        const newSection = allSectionsRef.current[newIndex];
 
-            // 🚫 Bloquer toutes les interactions pendant 300ms
-            isChangingCategoryRef.current = true;
-            setTimeout(() => {
-              isChangingCategoryRef.current = false;
-            }, 300);
-
-            // Si c'est "🎮 Contrôleurs", appeler le handler spécial
-            if (section === "🎮 Contrôleurs") {
-              onManageControllersRef.current?.();
-            } else {
-              onSelectCategoryRef.current(section);
-            }
-          }
-        },
-        // Bouton B = Fermer les pages modales
-        onB: () => {
-          console.log("🔵 [Sidebar] onB appelé - currentCategory:", currentCategoryRef.current);
-          // ✅ Si une modal est ouverte, la fermer en revenant à "Tous les jeux"
-          const isModalPage =
-            currentCategoryRef.current === "📊 Statistiques" ||
-            currentCategoryRef.current === "🏆 Achievements" ||
-            currentCategoryRef.current === "🎮 Contrôleurs";
-
-          if (isModalPage) {
-            console.log(
-              "🎯 [Sidebar] Bouton B pressé - fermeture modal:",
-              currentCategoryRef.current
-            );
-            // ✅ CRITIQUE: Passer forceClose=true pour contourner le blocage dans App.jsx
-            onSelectCategoryRef.current("Tous les jeux", true);
-          } else {
-            console.log("⚠️ [Sidebar] Bouton B ignoré - pas de modal ouverte");
-          }
-        },
-        // Bouton X (alternatif) = Fermer les pages modales aussi
-        onX: () => {
-          console.log("🔵 [Sidebar] onX appelé - currentCategory:", currentCategoryRef.current);
-          const isModalPage =
-            currentCategoryRef.current === "📊 Statistiques" ||
-            currentCategoryRef.current === "🏆 Achievements" ||
-            currentCategoryRef.current === "🎮 Contrôleurs";
-
-          if (isModalPage) {
-            console.log(
-              "🎯 [Sidebar] Bouton X pressé - fermeture modal:",
-              currentCategoryRef.current
-            );
-            // ✅ CRITIQUE: Passer forceClose=true pour contourner le blocage dans App.jsx
-            onSelectCategoryRef.current("Tous les jeux", true);
-          }
-        },
+        if (newSection && newSection !== currentCategoryRef.current) {
+          isChangingCategoryRef.current = true;
+          setTimeout(() => {
+            isChangingCategoryRef.current = false;
+          }, 0.2); // ⚡⚡⚡⚡⚡⚡ Réduit à 0.2ms pour navigation quasi-instantanée
+          onSelectCategoryRef.current(newSection);
+          setSelectedIndex(newIndex);
+        }
       },
-      10
-    ); // Priorité 10 (moyenne) pour que Sidebar soit prioritaire sur GameGrid
+      // RB = Catégorie suivante (changement immédiate)
+      onRB: () => {
+        if (isChangingCategoryRef.current) return;
+        const currentIndex = allSectionsRef.current.indexOf(currentCategoryRef.current);
+        const newIndex = Math.min(allSectionsRef.current.length - 1, currentIndex + 1);
+        const newSection = allSectionsRef.current[newIndex];
+
+        if (newSection && newSection !== currentCategoryRef.current) {
+          isChangingCategoryRef.current = true;
+          setTimeout(() => {
+            isChangingCategoryRef.current = false;
+          }, 0.2); // ⚡⚡⚡⚡⚡⚡ Réduit à 0.2ms
+          onSelectCategoryRef.current(newSection);
+          setSelectedIndex(newIndex);
+        }
+      },
+      // Bouton Y = Ouvrir/Activer la page spéciale sélectionnée
+      onY: () => {
+        const section = currentCategoryRef.current;
+        console.log("🎯 [Sidebar] Bouton Y pressé - section:", section);
+        console.log("🔍 [Sidebar] Refs disponibles:", {
+          onManageControllers: !!onManageControllersRef.current,
+          onOpenStatistics: !!onOpenStatisticsRef.current,
+          onOpenAchievements: !!onOpenAchievementsRef.current,
+        });
+
+        // Si on est sur une page spéciale, l'ouvrir
+        if (section === "🎮 Contrôleurs") {
+          console.log("✅ Ouverture Contrôleurs");
+          onManageControllersRef.current?.();
+        } else if (section === "📊 Statistiques") {
+          console.log("✅ Tentative ouverture Statistiques");
+          if (onOpenStatisticsRef.current) {
+            onOpenStatisticsRef.current();
+            console.log("✅ Callback appelé");
+          } else {
+            console.error("❌ onOpenStatisticsRef.current est null/undefined!");
+          }
+        } else if (section === "🏆 Achievements") {
+          console.log("✅ Ouverture Achievements");
+          onOpenAchievementsRef.current?.();
+        } else {
+          console.log("⚠️ [Sidebar] Bouton Y ignoré - pas une page spéciale");
+        }
+      },
+      // D-pad haut = Section précédente + activation immédiate (alternative à LB)
+      onDPAD_UP: () => {
+        if (isChangingCategoryRef.current) return;
+        const currentIndex = allSectionsRef.current.indexOf(currentCategoryRef.current);
+        const newIndex = Math.max(0, currentIndex - 1);
+        const newSection = allSectionsRef.current[newIndex];
+
+        if (newSection && newSection !== currentCategoryRef.current) {
+          isChangingCategoryRef.current = true;
+          setTimeout(() => {
+            isChangingCategoryRef.current = false;
+          }, 300);
+          onSelectCategoryRef.current(newSection);
+          setSelectedIndex(newIndex);
+        }
+      },
+      // D-pad bas = Section suivante + activation immédiate
+      onDPAD_DOWN: () => {
+        if (isChangingCategoryRef.current) return;
+        const currentIndex = allSectionsRef.current.indexOf(currentCategoryRef.current);
+        const newIndex = Math.min(allSectionsRef.current.length - 1, currentIndex + 1);
+        const newSection = allSectionsRef.current[newIndex];
+
+        if (newSection && newSection !== currentCategoryRef.current) {
+          isChangingCategoryRef.current = true;
+          setTimeout(() => {
+            isChangingCategoryRef.current = false;
+          }, 300);
+          onSelectCategoryRef.current(newSection);
+          setSelectedIndex(newIndex);
+        }
+      },
+      // Bouton B = Fermer les pages modales
+      onB: () => {
+        console.log("🔵 [Sidebar] onB appelé - currentCategory:", currentCategoryRef.current);
+        // ✅ Si une modal est ouverte, la fermer en revenant à "Tous les jeux"
+        const isModalPage =
+          currentCategoryRef.current === "📊 Statistiques" ||
+          currentCategoryRef.current === "🏆 Achievements" ||
+          currentCategoryRef.current === "🎮 Contrôleurs";
+
+        if (isModalPage) {
+          console.log(
+            "🎯 [Sidebar] Bouton B pressé - fermeture modal:",
+            currentCategoryRef.current
+          );
+          // ✅ CRITIQUE: Passer forceClose=true pour contourner le blocage dans App.jsx
+          onSelectCategoryRef.current("Tous les jeux", true);
+        } else {
+          console.log("⚠️ [Sidebar] Bouton B ignoré - pas de modal ouverte");
+        }
+      },
+      // Bouton X (alternatif) = Fermer les pages modales aussi
+      onX: () => {
+        console.log("🔵 [Sidebar] onX appelé - currentCategory:", currentCategoryRef.current);
+        const isModalPage =
+          currentCategoryRef.current === "📊 Statistiques" ||
+          currentCategoryRef.current === "🏆 Achievements" ||
+          currentCategoryRef.current === "🎮 Contrôleurs";
+
+        if (isModalPage) {
+          console.log(
+            "🎯 [Sidebar] Bouton X pressé - fermeture modal:",
+            currentCategoryRef.current
+          );
+          // ✅ CRITIQUE: Passer forceClose=true pour contourner le blocage dans App.jsx
+          onSelectCategoryRef.current("Tous les jeux", true);
+        }
+      },
+    };
+
+    // 🎯 CRITIQUE: NE JAMAIS enregistrer onA dans Sidebar
+    // Le bouton A est TOUJOURS réservé à GameGrid pour lancer les jeux
+    // Utilisez LB/RB/D-pad pour naviguer, et le changement se fait automatiquement
+    console.log(
+      "⚠️ [Sidebar] Callback onA NON enregistré - réservé à GameGrid pour lancer les jeux"
+    );
+
+    const unregister = registerListener(callbacks, 25); // 🎯 Priorité 25 (supérieure à GameGrid priorité 5)
 
     // Sauvegarder la fonction unregister pour pouvoir l'appeler manuellement
     unregisterRef.current = unregister;
@@ -184,7 +234,7 @@ export default function Sidebar({
         unregisterRef.current = null;
       }
     };
-  }, [gamepadConnected, registerListener]); // ⚠️ CRITIQUE: Retirer isModalOpen pour éviter les réenregistrements
+  }, [gamepadConnected, registerListener, currentCategory]); // ✅ Ajout de currentCategory pour réenregistrer avec priorité dynamique
 
   // Mettre à jour l'index si la catégorie change depuis l'extérieur
   useEffect(() => {

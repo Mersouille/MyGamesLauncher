@@ -59,6 +59,9 @@ export default function App() {
   const [showAchievementsPage, setShowAchievementsPage] = useState(false);
   const [currentAchievementNotification, setCurrentAchievementNotification] = useState(null);
 
+  // 📊 État pour les statistiques
+  const [showStatistics, setShowStatistics] = useState(false);
+
   // � États pour les profils de contrôleurs
   const [controllerProfiles, setControllerProfiles] = useState([]);
   const [controllerProfilesLoaded, setControllerProfilesLoaded] = useState(false);
@@ -151,6 +154,9 @@ export default function App() {
       }
     }
   }, [newlyUnlocked, currentAchievementNotification, consumeNotification]);
+
+  // 🎮 NE PLUS ouvrir automatiquement - utiliser le bouton Y pour ouvrir
+  // (supprimé pour permettre la navigation libre avec LB/RB)
 
   // 🧠 Charger les jeux depuis Electron
   useEffect(() => {
@@ -432,6 +438,18 @@ export default function App() {
     showImportModal ||
     showCategorySelector;
 
+  // 🔍 DEBUG - Log pour vérifier isModalOpen
+  console.log("🔍 [App] isModalOpen =", isModalOpen, {
+    currentCategory,
+    showAchievementsPage,
+    showSettings,
+    showCollectionsManager,
+    showControllerManager,
+    showDetailsModal,
+    showImportModal,
+    showCategorySelector,
+  });
+
   // 🎨 Récupérer le thème actuel
   const currentTheme = getTheme(settings.theme);
 
@@ -447,13 +465,19 @@ export default function App() {
         return;
       }
 
-      // 🚨 CRITIQUE: Bloquer les fermetures automatiques de modales
-      // Mais AUTORISER les fermetures explicites (bouton B avec forceClose=true)
+      // 🚨 CRITIQUE: Bloquer UNIQUEMENT les fermetures automatiques vers "Tous les jeux"
+      // AUTORISER les changements entre pages modales et les fermetures explicites (forceClose=true)
       const currentModalOpen =
         currentCategory === "📊 Statistiques" ||
         currentCategory === "🏆 Achievements" ||
         currentCategory === "🎮 Contrôleurs";
 
+      const targetIsModal =
+        category === "📊 Statistiques" ||
+        category === "🏆 Achievements" ||
+        category === "🎮 Contrôleurs";
+
+      // Bloquer SEULEMENT si: on est dans une modale ET on va vers "Tous les jeux" ET pas de forceClose
       if (currentModalOpen && category === "Tous les jeux" && !forceClose) {
         console.log(
           "⚠️ [App] Tentative de fermeture automatique BLOQUÉE:",
@@ -463,6 +487,9 @@ export default function App() {
         );
         return;
       }
+
+      // ✅ AUTORISER: modale → autre modale, modale → catégorie de jeux, etc.
+      console.log("🔄 [App] Navigation autorisée:", currentCategory, "→", category);
 
       isChangingCategoryRef.current = true;
       console.log(
@@ -489,6 +516,17 @@ export default function App() {
     setShowControllerManager(true);
   }, []);
 
+  const handleOpenStatistics = useCallback(() => {
+    console.log("🎯 [App] handleOpenStatistics appelé - showStatistics avant:", showStatistics);
+    setShowStatistics(true);
+    console.log("✅ [App] setShowStatistics(true) appelé");
+  }, [showStatistics]);
+
+  const handleOpenAchievements = useCallback(() => {
+    console.log("🎯 [App] handleOpenAchievements appelé");
+    setShowAchievementsPage(true);
+  }, []);
+
   return (
     <div style={{ display: "flex", height: "100vh", overflow: "hidden" }}>
       {/* 🧭 Menu latéral gauche */}
@@ -498,6 +536,8 @@ export default function App() {
         collections={collections}
         onManageCollections={handleManageCollections}
         onManageControllers={handleManageControllers}
+        onOpenStatistics={handleOpenStatistics}
+        onOpenAchievements={handleOpenAchievements}
         isModalOpen={isModalOpen}
       />
 
@@ -617,18 +657,9 @@ export default function App() {
           </button>
         </div>
 
-        {/* 🎯 Affichage conditionnel : Statistiques, Achievements ou Jeux */}
-        {currentCategory === "📊 Statistiques" ? (
-          <Statistics games={games} onClose={() => handleSelectCategory("Tous les jeux", true)} />
-        ) : currentCategory === "🏆 Achievements" ? (
-          <AchievementsPage
-            games={games}
-            collections={collections}
-            unlockedAchievements={unlockedAchievements}
-            currentTheme={settings.theme}
-            onClose={() => handleSelectCategory("Tous les jeux", true)}
-          />
-        ) : (
+        {/* 🎯 Affichage : Toujours afficher GameGrid */}
+        {/* ⚠️ Les pages spéciales (Statistiques, Achievements, Contrôleurs) sont des modals overlay */}
+        {
           <>
             {/* �🔍 Barre de recherche et filtres */}
             <div className="max-w-7xl mx-auto px-6">
@@ -673,7 +704,7 @@ export default function App() {
               />
             </main>
           </>
-        )}
+        }
 
         {/* 📺 Mode Big Picture plein écran */}
         {isBigPicture && (
@@ -868,13 +899,42 @@ export default function App() {
           />
         )}
 
-        {/* 🎮 Gestionnaire de profils de contrôleurs */}
+        {/* 📊 Page Statistiques - Modal overlay */}
+        {showStatistics && (
+          <Statistics
+            games={games}
+            onClose={() => {
+              setShowStatistics(false);
+              // ✅ Rester sur "📊 Statistiques" pour continuer à naviguer
+            }}
+          />
+        )}
+
+        {/* 🏆 Page Achievements - Modal overlay */}
+        {showAchievementsPage && (
+          <AchievementsPage
+            games={games}
+            collections={collections}
+            unlockedAchievements={unlockedAchievements}
+            currentTheme={settings.theme}
+            onClose={() => {
+              setShowAchievementsPage(false);
+              // ✅ Rester sur "🏆 Achievements" pour continuer à naviguer
+            }}
+          />
+        )}
+
+        {/* 🎮 Gestionnaire de profils de contrôleurs - Modal overlay */}
         {showControllerManager && (
           <ControllerProfilesManager
             profiles={controllerProfiles}
             games={games}
             currentTheme={settings.theme}
-            onClose={() => setShowControllerManager(false)}
+            onClose={() => {
+              setShowControllerManager(false);
+              // ✅ NE PAS changer currentCategory - rester sur "🎮 Contrôleurs"
+              // pour permettre de continuer à naviguer avec LB vers Achievements/Statistiques
+            }}
             onSave={(updatedProfiles) => {
               setControllerProfiles(updatedProfiles);
               showToast("🎮 Profils de contrôleurs mis à jour !", "#10b981");

@@ -40,6 +40,25 @@ const AchievementsPage = ({
     return () => clearTimeout(timer);
   }, []);
 
+  // 🎮 Listener gamepad pour fermer avec le bouton B
+  useEffect(() => {
+    if (!gamepadConnected) return;
+
+    const unregister = registerListener(
+      {
+        onB: () => {
+          console.log("🎮 [AchievementsPage] Bouton B pressé - fermeture");
+          if (onCloseRef.current) {
+            onCloseRef.current();
+          }
+        },
+      },
+      100 // Priorité 100 (haute) pour fermer le modal
+    );
+
+    return unregister;
+  }, [gamepadConnected, registerListener]);
+
   // Calculer les statistiques actuelles
   const stats = useMemo(
     () => calculateStats(games, collections, unlockedAchievements),
