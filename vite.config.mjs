@@ -30,6 +30,8 @@ export default defineConfig({
 
   build: {
     outDir: "dist-react",
+    // 🔒 DÉSACTIVER modulePreload pour éviter les data: URIs bloquées par CSP
+    modulePreload: false,
     // Optimisations pour Electron
     rollupOptions: {
       output: {
