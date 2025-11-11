@@ -214,10 +214,21 @@ function createWindow() {
   // 🔸 Supprime le menu anglais par défaut
   Menu.setApplicationMenu(null);
 
-  // CSP désactivé - Sécurité assurée par contextIsolation + sandbox
-  // Le CSP bloque les scripts inline de Vite sans apporter de bénéfice supplémentaire
+  // 🔒 SUPPRIMER TOUS LES HEADERS CSP qui bloquent les scripts inline de Vite
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    const responseHeaders = { ...details.responseHeaders };
+    // Supprimer tous les headers CSP possibles
+    delete responseHeaders["content-security-policy"];
+    delete responseHeaders["Content-Security-Policy"];
+    delete responseHeaders["x-webkit-csp"];
+    delete responseHeaders["X-WebKit-CSP"];
+    delete responseHeaders["x-content-security-policy"];
+    delete responseHeaders["X-Content-Security-Policy"];
 
-  // �🔸 Configuration des en-têtes pour le développement
+    callback({ responseHeaders });
+  });
+
+  // Configuration des en-têtes pour le développement
   if (!app.isPackaged) {
     try {
       // DevTools désactivés au démarrage (utilisez le menu Affichage > DevTools si besoin)
