@@ -19,17 +19,7 @@
     <!-- 🎨 Styles -->
     <link rel="stylesheet" href="/src/styles/index.css" />
 
-    <!-- ⚡️ Sécurité CSP pour Electron (configuration permissive pour Vite) -->
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="default-src 'self' local: file:;
-               script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:;
-               style-src 'self' 'unsafe-inline' blob:;
-               img-src 'self' data: local: file: blob: https:;
-               media-src 'self' data: local: file: blob:;
-               connect-src 'self' ws://localhost:* http://localhost:* https://www.steamgriddb.com local:;
-               font-src 'self' data: blob:;"
-    />
+    <!-- ⚡️ CSP géré par Electron dans main.cjs (session.defaultSession.webRequest) -->
 
     <!-- 🧩 Préchargement (performance) -->
     <link rel="modulepreload" href="/src/main.jsx" />

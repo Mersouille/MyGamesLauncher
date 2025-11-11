@@ -213,7 +213,25 @@ function createWindow() {
   // 🔸 Supprime le menu anglais par défaut
   Menu.setApplicationMenu(null);
 
-  // 🔸 Configuration des en-têtes pour le développement
+  // � Configuration CSP sécurisée pour Electron (permet Vite en dev et prod)
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        "Content-Security-Policy": [
+          "default-src 'self' local: file:; " +
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; " +
+            "style-src 'self' 'unsafe-inline' blob:; " +
+            "img-src 'self' data: local: file: blob: https:; " +
+            "media-src 'self' data: local: file: blob:; " +
+            "connect-src 'self' ws://localhost:* http://localhost:* https://www.steamgriddb.com local:; " +
+            "font-src 'self' data: blob:;",
+        ],
+      },
+    });
+  });
+
+  // �🔸 Configuration des en-têtes pour le développement
   if (!app.isPackaged) {
     try {
       // DevTools désactivés au démarrage (utilisez le menu Affichage > DevTools si besoin)
