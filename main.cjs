@@ -213,23 +213,8 @@ function createWindow() {
   // 🔸 Supprime le menu anglais par défaut
   Menu.setApplicationMenu(null);
 
-  // � Configuration CSP sécurisée pour Electron (permet Vite en dev et prod)
-  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
-    callback({
-      responseHeaders: {
-        ...details.responseHeaders,
-        "Content-Security-Policy": [
-          "default-src 'self' local: file:; " +
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; " +
-            "style-src 'self' 'unsafe-inline' blob:; " +
-            "img-src 'self' data: local: file: blob: https:; " +
-            "media-src 'self' data: local: file: blob:; " +
-            "connect-src 'self' ws://localhost:* http://localhost:* https://www.steamgriddb.com local:; " +
-            "font-src 'self' data: blob:;",
-        ],
-      },
-    });
-  });
+  // CSP désactivé - Sécurité assurée par contextIsolation + sandbox
+  // Le CSP bloque les scripts inline de Vite sans apporter de bénéfice supplémentaire
 
   // �🔸 Configuration des en-têtes pour le développement
   if (!app.isPackaged) {
@@ -1547,12 +1532,13 @@ app.whenReady().then(() => {
       win?.webContents.send("update-status", { status: "downloaded", info });
     });
 
-    // Déclencher une vérification après le démarrage
-    setTimeout(() => {
-      autoUpdater.checkForUpdatesAndNotify().catch((e) => {
-        console.warn("⚠️ checkForUpdatesAndNotify a échoué:", e?.message || e);
-      });
-    }, 4000);
+    // Vérification automatique désactivée (évite le toast au démarrage)
+    // Utilisez le menu "Aide > Rechercher des mises à jour" pour vérifier manuellement
+    // setTimeout(() => {
+    //   autoUpdater.checkForUpdatesAndNotify().catch((e) => {
+    //     console.warn("⚠️ checkForUpdatesAndNotify a échoué:", e?.message || e);
+    //   });
+    // }, 4000);
 
     // APIs IPC pour pilotage manuel depuis le renderer
     ipcMain.handle("updates-check", async () => {

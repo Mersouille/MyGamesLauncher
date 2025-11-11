@@ -106,6 +106,11 @@ export default function Sidebar({
         const newIndex = Math.min(allSectionsRef.current.length - 1, currentIndex + 1);
         const newSection = allSectionsRef.current[newIndex];
 
+        console.log("🎯 [Sidebar] RB - currentCategory:", currentCategoryRef.current);
+        console.log("🎯 [Sidebar] RB - currentIndex:", currentIndex, "→ newIndex:", newIndex);
+        console.log("🎯 [Sidebar] RB - allSections:", allSectionsRef.current);
+        console.log("🎯 [Sidebar] RB - newSection:", newSection);
+
         if (newSection && newSection !== currentCategoryRef.current) {
           isChangingCategoryRef.current = true;
           setTimeout(() => {
