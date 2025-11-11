@@ -252,6 +252,22 @@ function createWindow() {
     });
   }
 
+  // ✅ Gérer le splash screen via executeJavaScript (évite script inline bloqué par CSP)
+  win.webContents.on("did-finish-load", () => {
+    win.webContents
+      .executeJavaScript(
+        `
+      setTimeout(() => {
+        const splash = document.getElementById('splash-screen');
+        const root = document.getElementById('root');
+        if (splash) splash.style.display = 'none';
+        if (root) root.style.display = 'block';
+      }, 800);
+    `
+      )
+      .catch((err) => console.error("❌ Erreur executeJavaScript splash:", err));
+  });
+
   // ✅ Afficher la fenêtre principale quand elle est prête et fermer le splash
   win.once("ready-to-show", () => {
     setTimeout(() => {

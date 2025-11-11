@@ -41,16 +41,6 @@
     <!-- === Script principal React/Vite === -->
     <script type="module" src="/src/main.jsx"></script>
 
-    <!-- === Script de gestion du splash screen === -->
-    <script>
-      window.addEventListener("DOMContentLoaded", () => {
-        const splash = document.getElementById("splash-screen");
-        const root = document.getElementById("root");
-        setTimeout(() => {
-          splash.style.display = "none";
-          root.style.display = "block";
-        }, 800);
-      });
-    </script>
+    <!-- Splash screen géré par Electron (pas de script inline pour éviter CSP) -->
   </body>
 </html>
