@@ -10,6 +10,10 @@ if (devRun) {
 const { app, BrowserWindow, ipcMain, protocol, dialog, Menu, session } = require("electron");
 const { autoUpdater } = require("electron-updater");
 
+// 🔓 DÉSACTIVE COMPLÈTEMENT LA SÉCURITÉ WEB POUR ÉVITER CSP
+app.commandLine.appendSwitch("disable-web-security");
+app.commandLine.appendSwitch("disable-features", "OutOfBlinkCors");
+
 // Log utile pour savoir si les warnings de sécurité ont été désactivés
 console.log(
   `🛡️ Dev mode: ${devRun} — ELECTRON_DISABLE_SECURITY_WARNINGS=${
@@ -203,11 +207,13 @@ function createWindow() {
       nodeIntegration: false,
       sandbox: false,
       // ⚠️ webSecurity désactivé pour éviter les problèmes de CSP avec Vite
-      // L'application locale n'a pas besoin de ces protections (pas de contenu externe)
       webSecurity: false,
-      allowRunningInsecureContent: false,
-      // ✅ Autorise l'autoplay audio (contourne la politique du navigateur)
+      allowRunningInsecureContent: true, // ✅ Permet tout contenu
+      // ✅ Autorise l'autoplay audio
       autoplayPolicy: "no-user-gesture-required",
+      // 🔒 DÉSACTIVER COMPLÈTEMENT LE CSP
+      experimentalFeatures: true,
+      enableBlinkFeatures: "BypassCSP", // ✅ BYPASS COMPLET DU CSP
     },
   });
 

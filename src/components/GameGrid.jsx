@@ -46,125 +46,176 @@ const GameGrid = ({
   selectedIndexRef.current = selectedIndex; // 🎮 Toujours à jour
   isModalOpenRef.current = isModalOpen; // 🎮 Toujours à jour
 
+  // 🔄 Force le réenregistrement quand games change
+  const [listenerKey, setListenerKey] = useState(0);
+  useEffect(() => {
+    setListenerKey((prev) => prev + 1);
+    console.log("🔄 [GameGrid] Liste de jeux changée, forcer réenregistrement listener");
+  }, [games]);
+
   // 🎮 Gestion de la navigation avec manette
   useEffect(() => {
+    console.log("🔔 [GameGrid] useEffect navigation DÉCLENCHÉ ! (key:", listenerKey, ")");
     console.log(
-      "🎮 [GameGrid] useEffect navigation - gamepadConnected:",
+      "🎮 [GameGrid] État - gamepadConnected:",
       gamepadConnected,
       "modalOpen:",
-      modalOpen
+      modalOpen,
+      "sortedGames.length:",
+      sortedGames.length
     );
 
     if (!gamepadConnected) {
-      console.log("⚠️ [GameGrid] Listener NON enregistré - manette non connectée");
+      console.log("❌ [GameGrid] BLOQUÉ - manette non connectée");
       return;
     }
 
     if (modalOpen) {
-      console.log("⚠️ [GameGrid] Listener NON enregistré - modal interne ouvert");
+      console.log("❌ [GameGrid] BLOQUÉ - modal interne ouvert");
       return;
     }
 
-    console.log("✅ [GameGrid] Enregistrement du listener de navigation");
-    const unregister = registerListener(
-      {
-        // Navigation horizontale (stick gauche)
-        onHorizontal: (direction) => {
-          setSelectedIndex((prev) => {
-            const newIndex = prev + direction;
-            const gamesCount = sortedGamesRef.current.length;
-            if (newIndex < 0) return 0;
-            if (newIndex >= gamesCount) return gamesCount - 1;
-            return newIndex;
-          });
-        },
-        // Navigation verticale (stick gauche)
-        onVertical: (direction) => {
-          setSelectedIndex((prev) => {
-            const newIndex = prev + direction * 4;
-            const gamesCount = sortedGamesRef.current.length;
-            if (newIndex < 0) return 0;
-            if (newIndex >= gamesCount) return gamesCount - 1;
-            return newIndex;
-          });
-        },
-        // Bouton A = Lancer le jeu sélectionné
-        onA: () => {
-          // 🚨 Vérifier si un modal externe est ouvert
-          if (isModalOpenRef.current) {
-            console.log("⚠️ [GameGrid] Bouton A ignoré - modal externe ouvert");
-            return;
-          }
+    console.log("✅ [GameGrid] Conditions OK, enregistrement du listener...");
 
-          // 🎮 CRITIQUE: Ne PAS consommer si aucun jeu n'est affiché
-          // Cela permet à la Sidebar de gérer le bouton A pour changer de catégorie
+    const callbacks = {
+      // Navigation horizontale (stick gauche)
+      onHorizontal: (direction) => {
+        setSelectedIndex((prev) => {
           const gamesCount = sortedGamesRef.current.length;
-          if (gamesCount === 0) {
-            console.log("⚠️ [GameGrid] Bouton A ignoré - aucun jeu affiché, laisser Sidebar gérer");
-            return; // Ne PAS consommer l'événement
-          }
-
-          const currentIndex = selectedIndexRef.current; // 🎮 Utiliser la ref au lieu de la closure
-          const selectedGame = sortedGamesRef.current[currentIndex];
-          console.log(
-            "🎮 [GameGrid] Bouton A pressé - Index:",
-            currentIndex,
-            "Jeu:",
-            selectedGame?.name
-          );
-          if (selectedGame && onLaunchRef.current) {
-            onLaunchRef.current(selectedGame);
-          } else {
-            console.warn("⚠️ [GameGrid] Aucun jeu sélectionné ou callback manquant");
-          }
-        },
-        // Bouton B = Toggle favori
-        onB: () => {
-          const currentIndex = selectedIndexRef.current; // 🎮 Utiliser la ref au lieu de la closure
-          const selectedGame = sortedGamesRef.current[currentIndex];
-          console.log(
-            "⭐ [GameGrid] Bouton B pressé - Index:",
-            currentIndex,
-            "Jeu:",
-            selectedGame?.name
-          );
-          if (selectedGame && onToggleFavoriteRef.current) {
-            onToggleFavoriteRef.current(selectedGame);
-          } else {
-            console.warn("⚠️ [GameGrid] Aucun jeu sélectionné ou callback manquant");
-          }
-        },
-        // D-pad pour navigation précise
-        onDPAD_LEFT: () => {
-          setSelectedIndex((prev) => {
-            const gamesCount = sortedGamesRef.current.length;
-            return Math.max(0, prev - 1);
-          });
-        },
-        onDPAD_RIGHT: () => {
-          setSelectedIndex((prev) => {
-            const gamesCount = sortedGamesRef.current.length;
-            return Math.min(gamesCount - 1, prev + 1);
-          });
-        },
-        onDPAD_UP: () => {
-          setSelectedIndex((prev) => Math.max(0, prev - 4));
-        },
-        onDPAD_DOWN: () => {
-          setSelectedIndex((prev) => {
-            const gamesCount = sortedGamesRef.current.length;
-            return Math.min(gamesCount - 1, prev + 4);
-          });
-        },
+          // 🔧 FIX: Si index invalide, partir de 0
+          const currentIndex = prev < 0 || prev >= gamesCount ? 0 : prev;
+          const newIndex = currentIndex + direction;
+          if (newIndex < 0) return 0;
+          if (newIndex >= gamesCount) return gamesCount - 1;
+          return newIndex;
+        });
       },
-      5
-    ); // 🎮 Priorité 5 (basse) - GameGrid ne consomme QUE si Sidebar n'a pas de callback onA
+      // Navigation verticale (stick gauche)
+      onVertical: (direction) => {
+        setSelectedIndex((prev) => {
+          const gamesCount = sortedGamesRef.current.length;
+          // 🔧 FIX: Si index invalide, partir de 0
+          const currentIndex = prev < 0 || prev >= gamesCount ? 0 : prev;
+          const newIndex = currentIndex + direction * 4;
+          if (newIndex < 0) return 0;
+          if (newIndex >= gamesCount) return gamesCount - 1;
+          return newIndex;
+        });
+      },
+      // Bouton A = Lancer le jeu sélectionné
+      onA: () => {
+        // 🚨 Vérifier si un modal externe est ouvert
+        if (isModalOpenRef.current) {
+          console.log("⚠️ [GameGrid] Bouton A ignoré - modal externe ouvert");
+          return;
+        }
+
+        // 🎮 CRITIQUE: Ne PAS consommer si aucun jeu n'est affiché
+        // Cela permet à la Sidebar de gérer le bouton A pour changer de catégorie
+        const gamesCount = sortedGamesRef.current.length;
+        if (gamesCount === 0) {
+          console.log("⚠️ [GameGrid] Bouton A ignoré - aucun jeu affiché, laisser Sidebar gérer");
+          return; // Ne PAS consommer l'événement
+        }
+
+        const currentIndex = selectedIndexRef.current; // 🎮 Utiliser la ref au lieu de la closure
+        const selectedGame = sortedGamesRef.current[currentIndex];
+        console.log(
+          "🎮 [GameGrid] Bouton A pressé - Index:",
+          currentIndex,
+          "Jeu:",
+          selectedGame?.name
+        );
+        if (selectedGame && onLaunchRef.current) {
+          onLaunchRef.current(selectedGame);
+        } else {
+          console.warn("⚠️ [GameGrid] Aucun jeu sélectionné ou callback manquant");
+        }
+      },
+      // Bouton B = Toggle favori
+      onB: () => {
+        const currentIndex = selectedIndexRef.current; // 🎮 Utiliser la ref au lieu de la closure
+        const selectedGame = sortedGamesRef.current[currentIndex];
+        console.log(
+          "⭐ [GameGrid] Bouton B pressé - Index:",
+          currentIndex,
+          "Jeu:",
+          selectedGame?.name
+        );
+        if (selectedGame && onToggleFavoriteRef.current) {
+          onToggleFavoriteRef.current(selectedGame);
+        } else {
+          console.warn("⚠️ [GameGrid] Aucun jeu sélectionné ou callback manquant");
+        }
+      },
+      // D-pad pour navigation précise dans la grille
+      onDPAD_LEFT: () => {
+        console.log("⬅️ [GameGrid] D-PAD LEFT reçu");
+        setSelectedIndex((prev) => {
+          const gamesCount = sortedGamesRef.current.length;
+          // 🔧 FIX: Si index invalide, partir de 0
+          const currentIndex = prev < 0 || prev >= gamesCount ? 0 : prev;
+          const newIndex = Math.max(0, currentIndex - 1);
+          console.log(`⬅️ [GameGrid] Index: ${prev} (corrigé: ${currentIndex}) → ${newIndex}`);
+          return newIndex;
+        });
+      },
+      onDPAD_RIGHT: () => {
+        console.log("➡️ [GameGrid] D-PAD RIGHT reçu");
+        setSelectedIndex((prev) => {
+          const gamesCount = sortedGamesRef.current.length;
+          // 🔧 FIX: Si index invalide, partir de 0
+          const currentIndex = prev < 0 || prev >= gamesCount ? 0 : prev;
+          const newIndex = Math.min(gamesCount - 1, currentIndex + 1);
+          console.log(`➡️ [GameGrid] Index: ${prev} (corrigé: ${currentIndex}) → ${newIndex}`);
+          return newIndex;
+        });
+      },
+      onDPAD_UP: () => {
+        console.log("⬆️ [GameGrid] D-PAD UP reçu");
+        setSelectedIndex((prev) => {
+          const gamesCount = sortedGamesRef.current.length;
+          // 🔧 FIX: Si index invalide, partir de 0
+          const currentIndex = prev < 0 || prev >= gamesCount ? 0 : prev;
+          const newIndex = Math.max(0, currentIndex - 4);
+          console.log(`⬆️ [GameGrid] Index: ${prev} (corrigé: ${currentIndex}) → ${newIndex}`);
+          return newIndex;
+        });
+      },
+      onDPAD_DOWN: () => {
+        console.log("⬇️ [GameGrid] D-PAD DOWN reçu");
+        setSelectedIndex((prev) => {
+          const gamesCount = sortedGamesRef.current.length;
+          // 🔧 FIX: Si index invalide, partir de 0
+          const currentIndex = prev < 0 || prev >= gamesCount ? 0 : prev;
+          const newIndex = Math.min(gamesCount - 1, currentIndex + 4);
+          console.log(`⬇️ [GameGrid] Index: ${prev} (corrigé: ${currentIndex}) → ${newIndex}`);
+          return newIndex;
+        });
+      },
+    };
+
+    console.log("🎮 [GameGrid] Callbacks à enregistrer:", Object.keys(callbacks));
+
+    const unregister = registerListener(callbacks, 50); // 🎮 Priorité 50 (HAUTE) - GameGrid traite en PREMIER, consomme D-pad et bouton A, laisse LB/RB à Sidebar (priorité 1)
 
     return () => {
       console.log("🗑️ [GameGrid] Désenregistrement du listener de navigation");
       unregister();
     };
-  }, [gamepadConnected, modalOpen, registerListener]); // ✅ Retiré isModalOpen des dépendances pour éviter les cycles infinis
+  }, [gamepadConnected, modalOpen, registerListener, listenerKey]); // ✅ Réenregistrer quand listenerKey change
+
+  // 🔄 Reset l'index à 0 quand la liste de jeux change
+  useEffect(() => {
+    console.log(
+      `🔄 [GameGrid] Check reset - sortedGames.length: ${sortedGames.length}, selectedIndex: ${selectedIndex}`
+    );
+
+    if (sortedGames.length > 0 && selectedIndex < 0) {
+      console.log("🔄 [GameGrid] FORCE Reset selectedIndex à 0 (index négatif)");
+      setSelectedIndex(0);
+    }
+  }, [sortedGames.length, selectedIndex]); // ✅ Inclure selectedIndex pour détecter -1
 
   // 🎯 Scroll automatique vers le jeu sélectionné
   useEffect(() => {

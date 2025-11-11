@@ -35,23 +35,25 @@ export function useBackgroundMusic(settings = {}, onSettingsChange) {
     if (!audioRef.current) {
       audioRef.current = new Audio();
       audioRef.current.loop = false; // Désactiver loop pour changement auto
-      audioRef.current.volume = settings.musicVolume || 0.3;
-
-      // Événement de fin de piste : passer à une piste aléatoire
-      audioRef.current.addEventListener("ended", () => {
-        const nextRandomTrack = getRandomTrack();
-        setCurrentTrack(nextRandomTrack);
-        console.log("🎵 Changement automatique vers:", nextRandomTrack);
-      });
+      audioRef.current.volume = settings.musicVolume || 0.15;
     }
+
+    // 🎵 CRITIQUE: Réattacher l'événement ended à chaque changement de piste
+    const handleEnded = () => {
+      console.log("🎵 Piste terminée, changement automatique...");
+      const nextRandomTrack = getRandomTrack();
+      setCurrentTrack(nextRandomTrack);
+      console.log("🎵 Nouvelle piste:", nextRandomTrack);
+    };
+
+    audioRef.current.addEventListener("ended", handleEnded);
 
     return () => {
       if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
+        audioRef.current.removeEventListener("ended", handleEnded);
       }
     };
-  }, [getRandomTrack]);
+  }, [getRandomTrack, currentTrack]); // ✅ Réattacher quand currentTrack change
 
   // Charger la piste actuelle quand elle change
   useEffect(() => {

@@ -233,6 +233,13 @@ function startGlobalGameLoop() {
       globalButtonConsumed = {};
 
       // Notifier tous les listeners (par ordre de priorité - déjà triés)
+      if (gameLoopIterations % 180 === 0 && globalListeners.length > 0) {
+        console.log("📋 [gameLoop] Ordre des listeners (priorité décroissante):");
+        globalListeners.forEach((l, idx) => {
+          console.log(`  ${idx + 1}. ID: ${l.id}, Priorité: ${l.priority}`);
+        });
+      }
+
       globalListeners.forEach((listener) => {
         const { callbacks } = listener;
 
@@ -245,6 +252,13 @@ function startGlobalGameLoop() {
             // Transition OFF -> ON
             const callbackName = `on${name}`;
 
+            // 🔍 DEBUG: Logger TOUS les boutons pressés
+            console.log(
+              `🔘 [gameLoop] Bouton ${name} (index ${index}) PRESSÉ - callback ${callbackName} existe: ${!!callbacks[
+                callbackName
+              ]}`
+            );
+
             // 🎮 Vérifier si le bouton n'a pas déjà été consommé ce frame
             if (!globalButtonConsumed[name] && callbacks[callbackName]) {
               try {
@@ -254,13 +268,29 @@ function startGlobalGameLoop() {
                 callbacks[callbackName]();
                 // Marquer comme consommé pour empêcher les autres listeners de réagir
                 globalButtonConsumed[name] = true;
-                console.log(`✅ [gameLoop] ${callbackName} terminé avec succès`);
+                console.log(`✅ [gameLoop] ${callbackName} terminé avec succès, CONSOMMÉ`);
               } catch (error) {
                 console.error(`❌ Erreur dans callback ${callbackName}:`, error);
               }
+            } else if (globalButtonConsumed[name]) {
+              console.log(
+                `⏭️ [gameLoop] ${callbackName} IGNORÉ - déjà consommé par listener de priorité supérieure`
+              );
             }
           }
-        }); // Axes (stick gauche)
+        });
+
+        // 🔍 DEBUG: Logger TOUS les axes pour identifier le D-pad
+        if (gameLoopIterations % 60 === 0) {
+          const axesValues = Array.from(gamepad.axes)
+            .map((v, i) => `axis${i}: ${v.toFixed(2)}`)
+            .join(", ");
+          if (gamepad.axes.some((v) => Math.abs(v) > 0.1)) {
+            console.log(`🕹️ [gameLoop] Axes actifs: ${axesValues}`);
+          }
+        }
+
+        // Axes (stick gauche)
         const now = Date.now();
         const horizontal = gamepad.axes[0] || 0;
         const vertical = gamepad.axes[1] || 0;

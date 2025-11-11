@@ -12,7 +12,7 @@ export default function MusicPlayer({
   onPause,
   onChangeTrack,
   onVolumeChange,
-  volume = 0.3,
+  volume = 0.15,
   theme,
 }) {
   const [showMenu, setShowMenu] = React.useState(false);

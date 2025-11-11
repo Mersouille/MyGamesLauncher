@@ -27,7 +27,7 @@ export default function App() {
     theme: "dark",
     musicEnabled: true, // ✅ Activé par défaut - démarre automatiquement
     currentTrack: "track1",
-    musicVolume: 0.3,
+    musicVolume: 0.15, // 🔉 Volume initial réduit (15%)
   });
   const [isBigPicture, setIsBigPicture] = useState(false); // 📺 Etat Big Picture
   const [showSettings, setShowSettings] = useState(false);
@@ -959,7 +959,7 @@ export default function App() {
           onPause={music.pause}
           onChangeTrack={music.changeTrack}
           onVolumeChange={music.changeVolume}
-          volume={settings.musicVolume || 0.3}
+          volume={settings.musicVolume || 0.15}
           theme={getTheme(settings.theme)}
         />
       </div>
