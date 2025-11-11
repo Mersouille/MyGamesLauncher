@@ -884,7 +884,8 @@ ipcMain.handle("sgdb-download-grid-by-url", async (_, { url, filenamePrefix = ""
   try {
     if (!url) throw new Error("url is required");
 
-    const coversDir = path.join(__dirname, "covers");
+    // ✅ Utiliser userData au lieu de __dirname (qui est en lecture seule en production)
+    const coversDir = path.join(app.getPath("userData"), "covers");
     if (!fs.existsSync(coversDir)) fs.mkdirSync(coversDir, { recursive: true });
 
     const res = await fetch(url);
@@ -1083,9 +1084,11 @@ function registerLocalProtocol() {
       // Sinon, extraire le chemin relatif après "covers/"
       const relativePath = url.replace(/^covers[\/\\]/, "");
       const candidates = [
+        // ✅ Priorité 1: userData/covers (où sont stockées les jaquettes téléchargées)
+        path.join(app.getPath("userData"), "covers", relativePath),
+        // Fallbacks pour compatibilité dev
         path.join(__dirname, "covers", relativePath),
         path.join(process.cwd(), "covers", relativePath),
-        path.join(app && app.getAppPath ? app.getAppPath() : process.cwd(), "covers", relativePath),
       ];
 
       let found = null;
@@ -1241,6 +1244,34 @@ function createAppMenu(lang = "fr") {
         {
           label: isFrench ? "Site officiel" : "Official Website",
           click: () => require("electron").shell.openExternal("https://github.com/"),
+        },
+        { type: "separator" },
+        {
+          label: isFrench ? "🗑️ Réinitialiser les données" : "🗑️ Reset Data",
+          click: () => {
+            const choice = dialog.showMessageBoxSync({
+              type: "warning",
+              title: isFrench ? "Réinitialiser" : "Reset",
+              message: isFrench
+                ? "⚠️ Voulez-vous supprimer tous les jeux et paramètres ?\n\nCette action est irréversible !"
+                : "⚠️ Do you want to delete all games and settings?\n\nThis action is irreversible!",
+              buttons: isFrench ? ["Annuler", "Réinitialiser"] : ["Cancel", "Reset"],
+              defaultId: 0,
+              cancelId: 0,
+            });
+            if (choice === 1) {
+              store.clear();
+              dialog.showMessageBox({
+                type: "info",
+                title: isFrench ? "Réinitialisation" : "Reset",
+                message: isFrench
+                  ? "✅ Données supprimées.\nRedémarrez l'application."
+                  : "✅ Data deleted.\nRestart the application.",
+              });
+              app.relaunch();
+              app.quit();
+            }
+          },
         },
         { type: "separator" },
         {
@@ -1497,6 +1528,11 @@ app.whenReady().then(() => {
       win?.webContents.send("update-status", { status: "none", info });
     });
     autoUpdater.on("error", (err) => {
+      // ⚠️ Ignorer silencieusement les erreurs 404 (pas de release GitHub publiée)
+      if (err?.message?.includes("404")) {
+        console.log("ℹ️ Aucune release GitHub trouvée (normal en première installation)");
+        return;
+      }
       console.error("❌ Erreur autoUpdater:", err?.stack || err?.message || String(err));
       win?.webContents.send("update-status", {
         status: "error",
