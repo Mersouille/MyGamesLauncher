@@ -19,15 +19,16 @@
     <!-- 🎨 Styles -->
     <link rel="stylesheet" href="/src/styles/index.css" />
 
-    <!-- ⚡️ Sécurité CSP pour Electron (configuration sécurisée) -->
+    <!-- ⚡️ Sécurité CSP pour Electron (configuration permissive pour Vite) -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self' local:;
-               script-src 'self' 'unsafe-inline' 'unsafe-eval';
-               style-src 'self' 'unsafe-inline';
+      content="default-src 'self' local: file:;
+               script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:;
+               style-src 'self' 'unsafe-inline' blob:;
                img-src 'self' data: local: file: blob: https:;
+               media-src 'self' data: local: file: blob:;
                connect-src 'self' ws://localhost:* http://localhost:* https://www.steamgriddb.com local:;
-               font-src 'self' data:;"
+               font-src 'self' data: blob:;"
     />
 
     <!-- 🧩 Préchargement (performance) -->

@@ -13,10 +13,10 @@ export function useBackgroundMusic(settings = {}, onSettingsChange) {
 
   // Liste des pistes disponibles (à placer dans public/music/)
   const tracks = [
-    { id: "track1", name: "Ambiance 1", file: "/music/track1.mp3" },
-    { id: "track2", name: "Ambiance 2", file: "/music/track2.mp3" },
-    { id: "track3", name: "Ambiance 3", file: "/music/track3.mp3" },
-    { id: "track4", name: "Ambiance 4", file: "/music/track4.mp3" },
+    { id: "track1", name: "Ambiance 1", file: "./music/track1.mp3" },
+    { id: "track2", name: "Ambiance 2", file: "./music/track2.mp3" },
+    { id: "track3", name: "Ambiance 3", file: "./music/track3.mp3" },
+    { id: "track4", name: "Ambiance 4", file: "./music/track4.mp3" },
   ];
 
   // Fonction pour obtenir une piste aléatoire
