@@ -2040,9 +2040,7 @@ ipcMain.handle("import-game", async (_, game) => {
       id: Date.now(),
       name: game.name,
       path: game.path,
-      category: game.launcher
-        ? `${game.launcher.charAt(0).toUpperCase()}${game.launcher.slice(1)}`
-        : "Tous les jeux",
+      category: game.category || "Action / Aventure", // Utiliser la catégorie fournie ou défaut
       playTime: 0,
       favorite: false,
       dateAdded: new Date().toISOString(),

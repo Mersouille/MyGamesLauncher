@@ -106,18 +106,25 @@ export function useBackgroundMusic(settings = {}, onSettingsChange) {
     }
   }, [currentTrack, settings.musicEnabled, tracks]);
 
-  // Gérer l'activation/désactivation de la musique
+  // Gérer l'activation/désactivation de la musique (UNIQUEMENT au changement du toggle)
+  const musicEnabledRef = useRef(settings.musicEnabled);
+
   useEffect(() => {
     if (!audioRef.current || isLoadingRef.current) return; // ⏭️ Skip si déjà en chargement
 
-    if (settings.musicEnabled && audioRef.current.paused) {
-      audioRef.current.play().catch((err) => {
-        console.warn("⚠️ Impossible de lancer la musique automatiquement:", err);
-      });
-      setIsPlaying(true);
-    } else if (!settings.musicEnabled && !audioRef.current.paused) {
-      audioRef.current.pause();
-      setIsPlaying(false);
+    // Ne déclencher que si le statut a réellement changé
+    if (settings.musicEnabled !== musicEnabledRef.current) {
+      musicEnabledRef.current = settings.musicEnabled;
+
+      if (settings.musicEnabled && audioRef.current.paused) {
+        audioRef.current.play().catch((err) => {
+          console.warn("⚠️ Impossible de lancer la musique automatiquement:", err);
+        });
+        setIsPlaying(true);
+      } else if (!settings.musicEnabled && !audioRef.current.paused) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      }
     }
   }, [settings.musicEnabled]);
 

@@ -29,10 +29,19 @@ export default function App() {
     musicEnabled: true, // ✅ Activé par défaut - démarre automatiquement
     currentTrack: "track1",
     musicVolume: 0.15, // 🔉 Volume initial réduit (15%)
-    uiScale:
-      typeof window !== "undefined" && window?.screen?.width >= 3000
-        ? 0.8 // 🔽 Réduction légère par défaut sur écrans 4K
-        : 1,
+    uiScale: (() => {
+      if (typeof window === "undefined") return 1;
+      const width = window?.screen?.width || 1920;
+      const height = window?.screen?.height || 1080;
+
+      // 📺 Détection TV 4K (3840x2160 ou supérieur)
+      if (width >= 3840 && height >= 2160) {
+        return 0.65; // 🔽 Réduction importante pour TV 4K 65 pouces
+      } else if (width >= 3000) {
+        return 0.8; // 🔽 Réduction légère pour moniteurs 4K
+      }
+      return 1; // ✅ Taille normale pour 1080p/1440p
+    })(),
   });
   const [isBigPicture, setIsBigPicture] = useState(false); // 📺 Etat Big Picture
   const [showSettings, setShowSettings] = useState(false);
