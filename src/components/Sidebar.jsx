@@ -11,7 +11,6 @@ export default function Sidebar({
   onManageControllers,
   onOpenStatistics,
   onOpenAchievements,
-  onOpenJournal,
   isModalOpen = false,
 }) {
   const { gamepadConnected, registerListener } = useGamepad();
@@ -320,31 +319,7 @@ export default function Sidebar({
         </div>
       )}
 
-      {/* 📝 Bouton Journal (historique) */}
-      <button
-        onClick={() => onOpenJournal && onOpenJournal()}
-        style={{
-          width: "100%",
-          padding: "12px",
-          borderRadius: "8px",
-          cursor: "pointer",
-          marginBottom: "10px",
-          marginTop: gamepadConnected ? "50px" : "0",
-          background: "#374151",
-          color: "white",
-          fontSize: "0.95rem",
-          fontWeight: "600",
-          transition: "all 0.2s",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "8px",
-        }}
-      >
-        📝 Journal
-      </button>
-
-      {/* 📊 Bouton Statistiques */}
+      {/*  Bouton Statistiques */}
       <button
         onClick={() => {
           console.log("📊 Clic Statistiques détecté");

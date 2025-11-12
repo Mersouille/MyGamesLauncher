@@ -4,7 +4,7 @@ import { useTheme } from "../context/ThemeContext";
 import { getTheme } from "../data/themes";
 import { useGamepad } from "../hooks/useGamepad";
 
-export default function SettingsPanel({ settings, setSettings, onClose }) {
+export default function SettingsPanel({ settings, setSettings, onClose, onOpenJournal }) {
   const { setTheme } = useTheme();
   const { gamepadConnected, registerListener } = useGamepad();
 
@@ -91,7 +91,12 @@ export default function SettingsPanel({ settings, setSettings, onClose }) {
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <SettingsMenu settings={currentSettings} onChange={handleChange} onClose={onClose} />
+        <SettingsMenu
+          settings={currentSettings}
+          onChange={handleChange}
+          onClose={onClose}
+          onOpenJournal={onOpenJournal}
+        />
       </div>
     </div>
   );

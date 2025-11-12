@@ -1,7 +1,7 @@
 import React from "react";
 import { themes, getTheme } from "../../data/themes";
 
-export default function SettingsMenu({ settings, onChange, onClose }) {
+export default function SettingsMenu({ settings, onChange, onClose, onOpenJournal }) {
   const currentThemeKey = settings.theme || "dark";
   const currentTheme = getTheme(currentThemeKey);
 
@@ -30,8 +30,72 @@ export default function SettingsMenu({ settings, onChange, onClose }) {
           textShadow: `0 0 8px ${currentTheme.shadow}`,
         }}
       >
-        �️ Affichage
+        ⚙️ Paramètres
       </h3>
+
+      {/* 📝 Bouton Journal */}
+      <div style={{ marginBottom: "32px" }}>
+        <button
+          onClick={() => onOpenJournal && onOpenJournal()}
+          style={{
+            width: "100%",
+            padding: "12px",
+            borderRadius: "8px",
+            cursor: "pointer",
+            background: currentTheme.primary,
+            color: currentTheme.text,
+            fontSize: "0.95rem",
+            fontWeight: "600",
+            border: `2px solid ${currentTheme.border}`,
+            transition: "all 0.3s ease",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "8px",
+            boxShadow: `0 2px 8px ${currentTheme.shadow}`,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = currentTheme.primaryHover;
+            e.currentTarget.style.transform = "scale(1.02)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = currentTheme.primary;
+            e.currentTarget.style.transform = "scale(1)";
+          }}
+        >
+          📝 Journal des conversations
+        </button>
+        <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 8, textAlign: "center" }}>
+          Consultez l'historique de vos interactions
+        </div>
+      </div>
+
+      {/* 🎨 Section Affichage */}
+      <h3
+        style={{
+          textAlign: "center",
+          fontWeight: 600,
+          fontSize: "1.4rem",
+          marginBottom: "16px",
+          color: currentTheme.text,
+          textShadow: `0 0 8px ${currentTheme.shadow}`,
+        }}
+      >
+        🎨 Affichage
+      </h3>
+
+      {/* Info : Thème déplacé dans l'icône */}
+      <p
+        style={{
+          fontSize: "0.85rem",
+          color: "#888",
+          marginBottom: "16px",
+          textAlign: "center",
+          fontStyle: "italic",
+        }}
+      >
+        💡 Pour changer le thème, cliquez sur l'icône en haut à droite
+      </p>
 
       {/* 🔎 Taille de la grille (uiScale) */}
       <div style={{ marginBottom: 20 }}>
@@ -74,21 +138,8 @@ export default function SettingsMenu({ settings, onChange, onClose }) {
           textShadow: `0 0 8px ${currentTheme.shadow}`,
         }}
       >
-        �🔑 Configuration API
+        🔑 Configuration API
       </h3>
-
-      {/* Info : Thème déplacé dans l'icône */}
-      <p
-        style={{
-          fontSize: "0.85rem",
-          color: "#888",
-          marginBottom: "16px",
-          textAlign: "center",
-          fontStyle: "italic",
-        }}
-      >
-        💡 Pour changer le thème, cliquez sur l'icône en haut à droite
-      </p>
 
       {/* 🎨 Sélecteur de thème - RETIRÉ, maintenant dans ThemeSelector */}
       <div style={{ marginBottom: "20px", display: "none" }}>

@@ -548,7 +548,6 @@ export default function App() {
         onManageControllers={handleManageControllers}
         onOpenStatistics={handleOpenStatistics}
         onOpenAchievements={handleOpenAchievements}
-        onOpenJournal={handleOpenJournal}
         isModalOpen={isModalOpen}
       />
 
@@ -811,6 +810,7 @@ export default function App() {
             settings={settings}
             setSettings={setSettings}
             onClose={() => setShowSettings(false)}
+            onOpenJournal={handleOpenJournal}
           />
         )}
 
