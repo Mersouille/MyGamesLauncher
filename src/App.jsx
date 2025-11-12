@@ -565,7 +565,11 @@ export default function App() {
         }}
       >
         {/* 🎨 Sélecteur rapide de thème (remplace l'ancien bouton paramètres) */}
-        <ThemeSelector settings={settings} onChange={handleSettingsChange} />
+        <ThemeSelector
+          settings={settings}
+          onChange={handleSettingsChange}
+          onOpenJournal={handleOpenJournal}
+        />
 
         {/* 📺 Bouton flottant Big Picture (en haut à droite, sous le sélecteur de thème) */}
         {!isBigPicture && (
@@ -810,7 +814,6 @@ export default function App() {
             settings={settings}
             setSettings={setSettings}
             onClose={() => setShowSettings(false)}
-            onOpenJournal={handleOpenJournal}
           />
         )}
 

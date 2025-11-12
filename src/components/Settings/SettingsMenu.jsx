@@ -1,18 +1,9 @@
 import React from "react";
 import { themes, getTheme } from "../../data/themes";
 
-export default function SettingsMenu({ settings, onChange, onClose, onOpenJournal }) {
+export default function SettingsMenu({ settings, onChange, onClose }) {
   const currentThemeKey = settings.theme || "dark";
   const currentTheme = getTheme(currentThemeKey);
-
-  // 🎨 Change de thème + synchronise avec Electron
-  const handleThemeChange = (newTheme) => {
-    const newSettings = { ...settings, theme: newTheme };
-    onChange(newSettings);
-    if (window?.electronAPI?.setTheme) {
-      window.electronAPI.setTheme(newTheme);
-    }
-  };
 
   return (
     <div
@@ -20,114 +11,6 @@ export default function SettingsMenu({ settings, onChange, onClose, onOpenJourna
         width: "100%",
       }}
     >
-      <h3
-        style={{
-          textAlign: "center",
-          fontWeight: 600,
-          fontSize: "1.4rem",
-          marginBottom: "16px",
-          color: currentTheme.text,
-          textShadow: `0 0 8px ${currentTheme.shadow}`,
-        }}
-      >
-        ⚙️ Paramètres
-      </h3>
-
-      {/* 📝 Bouton Journal */}
-      <div style={{ marginBottom: "32px" }}>
-        <button
-          onClick={() => onOpenJournal && onOpenJournal()}
-          style={{
-            width: "100%",
-            padding: "12px",
-            borderRadius: "8px",
-            cursor: "pointer",
-            background: currentTheme.primary,
-            color: currentTheme.text,
-            fontSize: "0.95rem",
-            fontWeight: "600",
-            border: `2px solid ${currentTheme.border}`,
-            transition: "all 0.3s ease",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "8px",
-            boxShadow: `0 2px 8px ${currentTheme.shadow}`,
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = currentTheme.primaryHover;
-            e.currentTarget.style.transform = "scale(1.02)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = currentTheme.primary;
-            e.currentTarget.style.transform = "scale(1)";
-          }}
-        >
-          📝 Journal des conversations
-        </button>
-        <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 8, textAlign: "center" }}>
-          Consultez l'historique de vos interactions
-        </div>
-      </div>
-
-      {/* 🎨 Section Affichage */}
-      <h3
-        style={{
-          textAlign: "center",
-          fontWeight: 600,
-          fontSize: "1.4rem",
-          marginBottom: "16px",
-          color: currentTheme.text,
-          textShadow: `0 0 8px ${currentTheme.shadow}`,
-        }}
-      >
-        🎨 Affichage
-      </h3>
-
-      {/* Info : Thème déplacé dans l'icône */}
-      <p
-        style={{
-          fontSize: "0.85rem",
-          color: "#888",
-          marginBottom: "16px",
-          textAlign: "center",
-          fontStyle: "italic",
-        }}
-      >
-        💡 Pour changer le thème, cliquez sur l'icône en haut à droite
-      </p>
-
-      {/* 🔎 Taille de la grille (uiScale) */}
-      <div style={{ marginBottom: 20 }}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: 8,
-          }}
-        >
-          <p style={{ fontWeight: 500, margin: 0, color: currentTheme.text }}>
-            Taille de la grille
-          </p>
-          <span style={{ fontSize: 12, color: "#9ca3af" }}>
-            {Math.round((settings.uiScale ?? 1) * 100)}%
-          </span>
-        </div>
-        <input
-          type="range"
-          min={0.6}
-          max={1.2}
-          step={0.05}
-          value={typeof settings.uiScale === "number" ? settings.uiScale : 1}
-          onChange={(e) => onChange({ ...settings, uiScale: parseFloat(e.target.value) })}
-          style={{ width: "100%" }}
-        />
-        <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 6 }}>
-          Ajuste la taille des jaquettes dans la grille et en Big Picture (utile sur TV 4K).
-        </div>
-      </div>
-
       <h3
         style={{
           textAlign: "center",
