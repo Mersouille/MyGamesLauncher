@@ -1273,10 +1273,22 @@ function createAppMenu(lang = "fr") {
           label: isFrench ? "Rechercher des mises à jour" : "Check for Updates",
           click: async () => {
             try {
+              const currentVer = app.getVersion();
+              const feedURL = autoUpdater.getFeedURL();
+
+              console.log("🔍 Menu: Recherche de mises à jour...");
+              console.log("  Version actuelle:", currentVer);
+              console.log("  Feed URL:", feedURL);
+
               win?.webContents.send("update-status", { status: "manual-check" });
-              await autoUpdater.checkForUpdates();
+              const result = await autoUpdater.checkForUpdates();
+
+              console.log("🔍 Menu: Résultat:", result);
             } catch (e) {
               const msg = e?.message || String(e);
+              console.error("🔍 Menu: Erreur:", msg);
+              console.error("🔍 Stack:", e?.stack);
+
               // 🧹 Silencieux si cas fréquents: 404/no feed/private/no publisher
               const m = msg.toLowerCase();
               const isBenign =
@@ -1293,8 +1305,8 @@ function createAppMenu(lang = "fr") {
                   type: "info",
                   title: isFrench ? "Mise à jour" : "Update",
                   message: isFrench
-                    ? "Aucune mise à jour publique trouvée (aucune release GitHub ou dépôt privé)."
-                    : "No public update found (no GitHub release or private repo).",
+                    ? `Aucune mise à jour publique trouvée.\n\nDébug:\n- Version: ${app.getVersion()}\n- Erreur: ${msg}`
+                    : `No public update found.\n\nDebug:\n- Version: ${app.getVersion()}\n- Error: ${msg}`,
                 });
                 win?.webContents.send("update-status", { status: "none" });
                 return;
@@ -1630,21 +1642,39 @@ app.whenReady().then(() => {
     // APIs IPC pour pilotage manuel depuis le renderer
     ipcMain.handle("updates-check", async () => {
       try {
-        console.log("🔍 [DEBUG] Version actuelle:", app.getVersion());
-        console.log("🔍 [DEBUG] URL de vérification:", autoUpdater.getFeedURL());
+        const currentVersion = app.getVersion();
+        const feedURL = autoUpdater.getFeedURL();
+
+        console.log("🔍 [DEBUG] Version actuelle:", currentVersion);
+        console.log("🔍 [DEBUG] URL de vérification:", feedURL);
 
         const res = await autoUpdater.checkForUpdates();
 
-        console.log("🔍 [DEBUG] Résultat checkForUpdates:", {
-          currentVersion: res?.currentVersion,
+        const debugInfo = {
+          currentVersion: currentVersion,
+          feedURL: feedURL,
           updateVersion: res?.updateInfo?.version,
           files: res?.updateInfo?.files?.map((f) => f.url),
-        });
+          hasUpdate: res?.updateInfo?.version > currentVersion,
+        };
 
-        return { ok: true, info: res?.updateInfo };
+        console.log("🔍 [DEBUG] Résultat checkForUpdates:", debugInfo);
+
+        return {
+          ok: true,
+          info: res?.updateInfo,
+          debug: debugInfo, // Renvoyer les infos de debug au renderer
+        };
       } catch (e) {
         console.error("🔍 [DEBUG] Erreur lors de la vérification:", e);
-        return { ok: false, error: e?.message || String(e) };
+        return {
+          ok: false,
+          error: e?.message || String(e),
+          debug: {
+            currentVersion: app.getVersion(),
+            errorStack: e?.stack,
+          },
+        };
       }
     });
     ipcMain.handle("updates-quit-and-install", () => {
