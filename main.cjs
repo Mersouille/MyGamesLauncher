@@ -1575,6 +1575,13 @@ app.whenReady().then(() => {
       ipcMain.handle("updates-quit-and-install", () => ({ ok: false, error: "not-packaged" }));
       return; // ne pas initialiser autoUpdater
     }
+
+    // 🔍 DEBUG: Afficher les infos de configuration
+    console.log("🔍 [DEBUG] Configuration autoUpdater:");
+    console.log("  - Version actuelle:", app.getVersion());
+    console.log("  - App packagée:", app.isPackaged);
+    console.log("  - Repo GitHub: Mersouille/MyGamesLauncher");
+
     // Conseillé: laisser electron-builder configurer l'URL de publication via package.json (publish)
     autoUpdater.autoDownload = true; // téléchargement auto des updates
     autoUpdater.autoInstallOnAppQuit = true; // installe à la fermeture
@@ -1623,9 +1630,20 @@ app.whenReady().then(() => {
     // APIs IPC pour pilotage manuel depuis le renderer
     ipcMain.handle("updates-check", async () => {
       try {
+        console.log("🔍 [DEBUG] Version actuelle:", app.getVersion());
+        console.log("🔍 [DEBUG] URL de vérification:", autoUpdater.getFeedURL());
+
         const res = await autoUpdater.checkForUpdates();
+
+        console.log("🔍 [DEBUG] Résultat checkForUpdates:", {
+          currentVersion: res?.currentVersion,
+          updateVersion: res?.updateInfo?.version,
+          files: res?.updateInfo?.files?.map((f) => f.url),
+        });
+
         return { ok: true, info: res?.updateInfo };
       } catch (e) {
+        console.error("🔍 [DEBUG] Erreur lors de la vérification:", e);
         return { ok: false, error: e?.message || String(e) };
       }
     });
