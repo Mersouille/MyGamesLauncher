@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGamepad } from "../hooks/useGamepad";
+import categories from "../data/categories.js";
 
 /**
  * 🎮 Modal de détails d'un jeu
@@ -13,6 +14,7 @@ export default function GameDetailsModal({ game, isOpen, onClose, onSave }) {
   const [status, setStatus] = useState(game?.status || "not-started");
   const [rating, setRating] = useState(game?.rating || 0);
   const [notes, setNotes] = useState(game?.notes || "");
+  const [category, setCategory] = useState(game?.category || "Action / Aventure");
   const [hoveredStar, setHoveredStar] = useState(0);
   const { gamepadConnected, registerListener } = useGamepad();
 
@@ -26,6 +28,7 @@ export default function GameDetailsModal({ game, isOpen, onClose, onSave }) {
       setStatus(game.status || "not-started");
       setRating(game.rating || 0);
       setNotes(game.notes || "");
+      setCategory(game.category || "Action / Aventure");
     }
   }, [game]);
 
@@ -62,6 +65,7 @@ export default function GameDetailsModal({ game, isOpen, onClose, onSave }) {
       status,
       rating,
       notes,
+      category,
     });
     onClose();
   };
@@ -168,6 +172,24 @@ export default function GameDetailsModal({ game, isOpen, onClose, onSave }) {
                     );
                   })}
                 </div>
+              </div>
+
+              {/* Catégorie */}
+              <div>
+                <label className="block text-white font-semibold mb-3 text-lg">📁 Catégorie</label>
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="w-full bg-gray-800 text-white border-2 border-gray-700 rounded-lg p-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all cursor-pointer"
+                >
+                  {categories
+                    .filter((cat) => cat !== "Tous les jeux")
+                    .map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                </select>
               </div>
 
               {/* Note */}

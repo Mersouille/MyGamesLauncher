@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { useTheme } from "../context/ThemeContext";
 import { getTheme } from "../data/themes";
+import categories from "../data/categories.js";
 
-const ImportGames = ({ onImport, onClose, theme }) => {
+function ImportGames({ onClose, onImport }) {
+  const { theme } = useTheme();
   const currentTheme = getTheme(theme || "dark");
   const [scanning, setScanning] = useState(false);
   const [gamesByLauncher, setGamesByLauncher] = useState({
@@ -16,6 +20,7 @@ const ImportGames = ({ onImport, onClose, theme }) => {
   const [selectedGames, setSelectedGames] = useState(new Set());
   const [importProgress, setImportProgress] = useState({ current: 0, total: 0 });
   const [importing, setImporting] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("Action / Aventure");
 
   const launcherInfo = {
     steam: { name: "Steam", icon: "🎮", color: "#1b2838" },
@@ -102,8 +107,8 @@ const ImportGames = ({ onImport, onClose, theme }) => {
         const game = gamesToImport[i];
         setImportProgress({ current: i + 1, total: gamesToImport.length });
 
-        // Importer le jeu
-        await window.electronAPI.importGame(game);
+        // Importer le jeu avec la catégorie sélectionnée
+        await window.electronAPI.importGame({ ...game, category: selectedCategory });
 
         // Petite pause pour éviter de surcharger
         await new Promise((resolve) => setTimeout(resolve, 100));
@@ -266,6 +271,50 @@ const ImportGames = ({ onImport, onClose, theme }) => {
                   Tout désélectionner
                 </button>
               </div>
+            </div>
+
+            {/* Sélection de catégorie */}
+            <div
+              style={{
+                marginBottom: "16px",
+                padding: "12px 16px",
+                background: currentTheme.cardHoverBg,
+                borderRadius: "8px",
+              }}
+            >
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "8px",
+                  fontSize: "0.9rem",
+                  fontWeight: "600",
+                  color: currentTheme.text,
+                }}
+              >
+                📁 Catégorie pour les jeux importés
+              </label>
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "8px 12px",
+                  background: currentTheme.cardBg,
+                  color: currentTheme.text,
+                  border: `1px solid ${currentTheme.border}`,
+                  borderRadius: "6px",
+                  fontSize: "0.9rem",
+                  cursor: "pointer",
+                }}
+              >
+                {categories
+                  .filter((cat) => cat !== "Tous les jeux")
+                  .map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+              </select>
             </div>
 
             {/* Listes des jeux par launcher */}
@@ -434,6 +483,6 @@ const ImportGames = ({ onImport, onClose, theme }) => {
       </style>
     </div>
   );
-};
+}
 
 export default ImportGames;

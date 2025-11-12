@@ -871,7 +871,13 @@ export default function App() {
               setGames((prev) =>
                 prev.map((g) =>
                   g.id === selectedGameForDetails.id
-                    ? { ...g, status: details.status, rating: details.rating, notes: details.notes }
+                    ? {
+                        ...g,
+                        status: details.status,
+                        rating: details.rating,
+                        notes: details.notes,
+                        category: details.category,
+                      }
                     : g
                 )
               );
