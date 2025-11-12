@@ -55,44 +55,46 @@ export function useBackgroundMusic(settings = {}, onSettingsChange) {
     };
   }, [getRandomTrack, currentTrack]); // ✅ Réattacher quand currentTrack change
 
-  // Charger la piste actuelle quand elle change
+  // Charger la piste actuelle quand elle change (évite l'erreur play() interrompu)
   useEffect(() => {
-    if (audioRef.current && currentTrack) {
-      const track = tracks.find((t) => t.id === currentTrack) || tracks[0];
-      const wasPlaying = !audioRef.current.paused;
+    if (!audioRef.current || !currentTrack) return;
 
-      // Attendre un court délai si déjà en chargement
-      const loadTrack = () => {
-        isLoadingRef.current = true; // 🔒 Verrouiller
+    const track = tracks.find((t) => t.id === currentTrack) || tracks[0];
+    const wasPlaying = !audioRef.current.paused || settings.musicEnabled;
+
+    const loadTrack = () => {
+      isLoadingRef.current = true;
+      try {
+        // Arrêter et remplacer la source proprement
+        audioRef.current.pause();
         audioRef.current.src = track.file;
+        audioRef.current.load();
 
-        // Rejouer automatiquement si la musique était en cours
-        if (wasPlaying || settings.musicEnabled) {
-          audioRef.current
-            .play()
-            .then(() => {
-              setIsPlaying(true);
-              console.log("▶️ Lecture:", track.name);
-            })
-            .catch((err) => {
-              console.warn("⚠️ Impossible de lancer la musique:", err);
-            })
-            .finally(() => {
-              isLoadingRef.current = false; // 🔓 Déverrouiller
-            });
-        } else {
-          isLoadingRef.current = false; // 🔓 Déverrouiller immédiatement si pas de play
-        }
-      };
-
-      if (isLoadingRef.current) {
-        // Si déjà en chargement, attendre 100ms puis charger
-        setTimeout(loadTrack, 100);
-      } else {
-        loadTrack();
+        const onCanPlay = () => {
+          audioRef.current.removeEventListener("canplay", onCanPlay);
+          if (wasPlaying) {
+            audioRef.current
+              .play()
+              .then(() => setIsPlaying(true))
+              .catch((err) => console.warn("⚠️ Lecture auto échouée:", err))
+              .finally(() => (isLoadingRef.current = false));
+          } else {
+            isLoadingRef.current = false;
+          }
+        };
+        audioRef.current.addEventListener("canplay", onCanPlay, { once: true });
+      } catch (e) {
+        console.warn("⚠️ Erreur lors du chargement de la piste:", e);
+        isLoadingRef.current = false;
       }
+    };
+
+    if (isLoadingRef.current) {
+      setTimeout(loadTrack, 120);
+    } else {
+      loadTrack();
     }
-  }, [currentTrack, settings.musicEnabled]);
+  }, [currentTrack, settings.musicEnabled, tracks]);
 
   // Gérer l'activation/désactivation de la musique
   useEffect(() => {
@@ -148,19 +150,13 @@ export function useBackgroundMusic(settings = {}, onSettingsChange) {
   // Changer de piste
   const changeTrack = useCallback(
     (trackId) => {
-      const track = tracks.find((t) => t.id === trackId);
-      if (track && audioRef.current) {
-        setCurrentTrack(trackId);
-        audioRef.current.src = track.file;
-        if (isPlaying) {
-          audioRef.current.play();
-        }
-        if (onSettingsChange) {
-          onSettingsChange({ ...settings, currentTrack: trackId });
-        }
+      // Ne pas toucher directement à l'élément audio ici
+      setCurrentTrack(trackId);
+      if (onSettingsChange) {
+        onSettingsChange({ ...settings, currentTrack: trackId });
       }
     },
-    [isPlaying, settings, onSettingsChange]
+    [settings, onSettingsChange]
   );
 
   // Piste suivante

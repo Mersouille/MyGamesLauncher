@@ -418,8 +418,8 @@ ipcMain.handle("download-image", async (_, { url, filename }) => {
   try {
     if (!url || !filename) throw new Error("url and filename are required");
 
-    // Assure que le dossier covers existe
-    const coversDir = path.join(__dirname, "covers");
+    // Assure que le dossier covers existe (dans userData en production)
+    const coversDir = path.join(app.getPath("userData"), "covers");
     if (!fs.existsSync(coversDir)) fs.mkdirSync(coversDir, { recursive: true });
 
     // Utilise fetch (Node 18+ / Electron) pour récupérer l'image
@@ -832,7 +832,7 @@ ipcMain.handle("sgdb-get-all-grids", async (_, { apiKey, term }) => {
     }
 
     // Télécharger les miniatures et servir via local://
-    const tempDir = path.join(__dirname, "covers", "temp");
+    const tempDir = path.join(app.getPath("userData"), "covers", "temp");
     if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
 
     // Limiter à 4 jaquettes et télécharger les miniatures
@@ -1242,20 +1242,27 @@ function createAppMenu(lang = "fr") {
       submenu: [
         {
           label: isFrench ? "Rechercher des mises à jour" : "Check for Updates",
-          click: () => {
+          click: async () => {
             try {
               win?.webContents.send("update-status", { status: "manual-check" });
-              autoUpdater.checkForUpdatesAndNotify().catch((e) => {
-                dialog.showErrorBox(
-                  isFrench ? "Mise à jour" : "Update",
-                  (isFrench ? "Erreur de vérification : " : "Check failed: ") +
-                    (e?.message || String(e))
-                );
-              });
+              await autoUpdater.checkForUpdates();
             } catch (e) {
+              const msg = e?.message || String(e);
+              // 🧹 Silencieux si 404 (aucune release) ou repo privé
+              if (msg.includes("404") || msg.toLowerCase().includes("releases.atom")) {
+                dialog.showMessageBox({
+                  type: "info",
+                  title: isFrench ? "Mise à jour" : "Update",
+                  message: isFrench
+                    ? "Aucune mise à jour publique trouvée (aucune release GitHub ou dépôt privé)."
+                    : "No public update found (no GitHub release or private repo).",
+                });
+                win?.webContents.send("update-status", { status: "none" });
+                return;
+              }
               dialog.showErrorBox(
                 isFrench ? "Mise à jour" : "Update",
-                (isFrench ? "Erreur : " : "Error: ") + (e?.message || String(e))
+                (isFrench ? "Erreur de vérification : " : "Check failed: ") + msg
               );
             }
           },
@@ -1597,7 +1604,72 @@ app.whenReady().then(() => {
 });
 
 // ------------------------------------------------------------
-// 🔹 Quitte quand toutes les fenêtres sont fermées
+// � Journal de conversation: stockage JSON dans userData/logs
+// ------------------------------------------------------------
+ipcMain.handle("save-conversation-entry", async (_, entry) => {
+  try {
+    const logsDir = path.join(app.getPath("userData"), "logs");
+    if (!fs.existsSync(logsDir)) fs.mkdirSync(logsDir, { recursive: true });
+    const filePath = path.join(logsDir, "conversation.json");
+
+    // Normaliser l'entrée
+    const normalized = {
+      id: Date.now() + "_" + Math.random().toString(36).slice(2, 8),
+      time: new Date().toISOString(),
+      type: String(entry?.type || "info"),
+      title: String(entry?.title || ""),
+      message: String(entry?.message || ""),
+      meta: entry?.meta || null,
+    };
+
+    let arr = [];
+    if (fs.existsSync(filePath)) {
+      try {
+        const raw = fs.readFileSync(filePath, "utf-8");
+        arr = JSON.parse(raw);
+        if (!Array.isArray(arr)) arr = [];
+      } catch (e) {
+        arr = [];
+      }
+    }
+
+    arr.push(normalized);
+    fs.writeFileSync(filePath, JSON.stringify(arr, null, 2));
+    return { ok: true, entry: normalized };
+  } catch (e) {
+    console.error("❌ save-conversation-entry:", e);
+    return { ok: false, error: e?.message || String(e) };
+  }
+});
+
+ipcMain.handle("get-conversation-history", async () => {
+  try {
+    const filePath = path.join(app.getPath("userData"), "logs", "conversation.json");
+    if (!fs.existsSync(filePath)) return { ok: true, entries: [] };
+    const raw = fs.readFileSync(filePath, "utf-8");
+    const arr = JSON.parse(raw);
+    return { ok: true, entries: Array.isArray(arr) ? arr : [] };
+  } catch (e) {
+    console.error("❌ get-conversation-history:", e);
+    return { ok: false, entries: [], error: e?.message || String(e) };
+  }
+});
+
+ipcMain.handle("clear-conversation-history", async () => {
+  try {
+    const logsDir = path.join(app.getPath("userData"), "logs");
+    if (!fs.existsSync(logsDir)) fs.mkdirSync(logsDir, { recursive: true });
+    const filePath = path.join(logsDir, "conversation.json");
+    fs.writeFileSync(filePath, JSON.stringify([], null, 2));
+    return { ok: true };
+  } catch (e) {
+    console.error("❌ clear-conversation-history:", e);
+    return { ok: false, error: e?.message || String(e) };
+  }
+});
+
+// ------------------------------------------------------------
+// �🔹 Quitte quand toutes les fenêtres sont fermées
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
 });

@@ -1,6 +1,7 @@
 // src/App.jsx
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import GameGrid from "./components/GameGrid";
+import ConversationJournal from "./components/ConversationJournal"; // 📝 Journal historique
 import SettingsPanel from "./pages/SettingsPanel";
 import Statistics from "./pages/Statistics"; // 📊 Page statistiques
 import ImportGames from "./pages/ImportGames"; // 📥 Import Steam/Epic
@@ -61,6 +62,8 @@ export default function App() {
 
   // 📊 État pour les statistiques
   const [showStatistics, setShowStatistics] = useState(false);
+  // 📝 Journal de conversation
+  const [showJournal, setShowJournal] = useState(false);
 
   // � États pour les profils de contrôleurs
   const [controllerProfiles, setControllerProfiles] = useState([]);
@@ -526,6 +529,9 @@ export default function App() {
     console.log("🎯 [App] handleOpenAchievements appelé");
     setShowAchievementsPage(true);
   }, []);
+  const handleOpenJournal = useCallback(() => {
+    setShowJournal(true);
+  }, []);
 
   return (
     <div style={{ display: "flex", height: "100vh", overflow: "hidden" }}>
@@ -538,6 +544,7 @@ export default function App() {
         onManageControllers={handleManageControllers}
         onOpenStatistics={handleOpenStatistics}
         onOpenAchievements={handleOpenAchievements}
+        onOpenJournal={handleOpenJournal}
         isModalOpen={isModalOpen}
       />
 
@@ -962,6 +969,14 @@ export default function App() {
           volume={settings.musicVolume || 0.15}
           theme={getTheme(settings.theme)}
         />
+        {/* 📝 Journal (modal) */}
+        {showJournal && (
+          <ConversationJournal
+            open={showJournal}
+            onClose={() => setShowJournal(false)}
+            theme={getTheme(settings.theme)}
+          />
+        )}
       </div>
     </div>
   );

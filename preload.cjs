@@ -169,6 +169,11 @@ contextBridge.exposeInMainWorld("electronAPI", {
     ipcRenderer.removeAllListeners("update-status");
     ipcRenderer.on("update-status", (_, payload) => callback && callback(payload));
   },
+
+  // 📝 Journal de conversation (JSON côté userData)
+  saveConversationEntry: (entry) => ipcRenderer.invoke("save-conversation-entry", entry),
+  getConversationHistory: () => ipcRenderer.invoke("get-conversation-history"),
+  clearConversationHistory: () => ipcRenderer.invoke("clear-conversation-history"),
 });
 
 // ------------------------------------------------------------

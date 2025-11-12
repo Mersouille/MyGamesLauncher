@@ -33,17 +33,27 @@ export default function BigPictureMode({
     return games.filter((g) => (g.category || "Tous les jeux") === cat);
   }, [games, categoryIndex]);
 
-  // Nombre de colonnes dynamiques selon la largeur d'écran
+  // 📺 Colonnes et taille cartes dynamiques (optimisées 4K)
   const getCols = () => {
-    const w = window.innerWidth || 3840;
-    const cardW = 420; // largeur approx carte 4K
-    const cols = Math.max(3, Math.min(8, Math.floor((w - 240) / cardW))); // marge safe-zone
+    const w = window.innerWidth || 1920;
+    const baseCard = Math.round(Math.min(320, Math.max(200, w / 14))); // ~14 colonnes virtuelles
+    const cols = Math.max(4, Math.min(10, Math.floor((w - 280) / (baseCard + 24))));
     return cols;
   };
   const [cols, setCols] = useState(getCols());
+  const getCardSize = () => {
+    const w = window.innerWidth || 1920;
+    const cardW = Math.round(Math.min(320, Math.max(200, w / 14)));
+    const cardH = Math.round(cardW * 1.5);
+    return { cardW, cardH };
+  };
+  const [{ cardW, cardH }, setCard] = useState(getCardSize());
 
   useEffect(() => {
-    const onResize = () => setCols(getCols());
+    const onResize = () => {
+      setCols(getCols());
+      setCard(getCardSize());
+    };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
@@ -195,8 +205,8 @@ export default function BigPictureMode({
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: `repeat(${cols}, minmax(320px, 1fr))`,
-            gap: 28,
+            gridTemplateColumns: `repeat(${cols}, minmax(${cardW}px, 1fr))`,
+            gap: 24,
             justifyItems: "center",
           }}
         >
@@ -209,8 +219,8 @@ export default function BigPictureMode({
                 key={g.id}
                 ref={selected ? selectedRef : null}
                 style={{
-                  width: 360,
-                  height: 540,
+                  width: cardW,
+                  height: cardH,
                   borderRadius: 24,
                   overflow: "hidden",
                   border: `4px solid ${selected ? currentTheme.accent : currentTheme.border}`,

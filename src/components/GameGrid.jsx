@@ -245,7 +245,7 @@ const GameGrid = ({
     >
       <div
         ref={gridRef}
-        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-10 w-full max-w-7xl"
+        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-8 w-full max-w-[98vw]"
       >
         {sortedGames.map((game, index) => {
           // Priorité : jaquette dans /covers via local:// si disponible, sinon icône encodée en base64
@@ -258,7 +258,7 @@ const GameGrid = ({
             <div
               key={game.id}
               ref={isSelected ? selectedCardRef : null}
-              className={`game-card relative w-64 h-96 rounded-2xl overflow-hidden shadow-lg border transition-all duration-300 ${
+              className={`game-card relative rounded-2xl overflow-hidden shadow-lg border transition-all duration-300 ${
                 game.favorite ? "ring-2 ring-yellow-400" : ""
               }`}
               style={{
@@ -269,6 +269,14 @@ const GameGrid = ({
                   ? `0 0 32px ${currentTheme.accent}, 0 12px 40px ${currentTheme.shadow}`
                   : `0 4px 16px ${currentTheme.shadow}`,
                 transform: isSelected ? "scale(1.1)" : "scale(1)",
+                // 📺 Responsive 4K: taille des cartes dynamique en fonction de la largeur écran
+                width:
+                  Math.max(160, Math.round(256 * Math.min(1, 1920 / (window.innerWidth || 1920)))) +
+                  "px",
+                height:
+                  Math.max(160, Math.round(256 * Math.min(1, 1920 / (window.innerWidth || 1920)))) *
+                    1.5 +
+                  "px",
               }}
               onMouseEnter={(e) => {
                 if (!isSelected) {
