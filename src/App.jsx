@@ -292,10 +292,17 @@ export default function App() {
       setShowSettings(true);
     });
 
+    // ✅ Écoute de l'événement "menu-open-journal" depuis le menu Aide
+    window.electronAPI.onOpenJournal(() => {
+      console.log("📝 [App] Ouverture du Journal depuis le menu");
+      handleOpenJournal();
+    });
+
     // ✅ Nettoyage à la fermeture du composant
     return () => {
       window.electronAPI.removeAllListeners?.("menu-add-game");
       window.electronAPI.removeAllListeners?.("menu-open-api-settings");
+      window.electronAPI.removeAllListeners?.("menu-open-journal");
     };
   }, []);
 
@@ -565,11 +572,7 @@ export default function App() {
         }}
       >
         {/* 🎨 Sélecteur rapide de thème (remplace l'ancien bouton paramètres) */}
-        <ThemeSelector
-          settings={settings}
-          onChange={handleSettingsChange}
-          onOpenJournal={handleOpenJournal}
-        />
+        <ThemeSelector settings={settings} onChange={handleSettingsChange} />
 
         {/* 📺 Bouton flottant Big Picture (en haut à droite, sous le sélecteur de thème) */}
         {!isBigPicture && (

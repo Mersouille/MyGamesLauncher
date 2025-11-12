@@ -96,6 +96,15 @@ contextBridge.exposeInMainWorld("electronAPI", {
     });
   },
 
+  // 📝 Écoute de l'ouverture du journal depuis le menu
+  onOpenJournal: (callback) => {
+    ipcRenderer.removeAllListeners("menu-open-journal");
+    ipcRenderer.on("menu-open-journal", () => {
+      console.log("📝 [DEBUG preload] Ouverture Journal demandée");
+      if (callback) callback();
+    });
+  },
+
   // 🌍 Mise à jour de la langue du menu
   updateMenuLanguage: (lang) => ipcRenderer.send("update-menu-language", lang),
 

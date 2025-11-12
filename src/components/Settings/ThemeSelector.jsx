@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { themes, getTheme } from "../../data/themes";
 
-export default function ThemeSelector({ settings, onChange, onOpenJournal }) {
+export default function ThemeSelector({ settings, onChange }) {
   const [isOpen, setIsOpen] = useState(false);
   const currentThemeKey = settings.theme || "dark";
   const currentTheme = getTheme(currentThemeKey);
@@ -13,22 +13,6 @@ export default function ThemeSelector({ settings, onChange, onOpenJournal }) {
       window.electronAPI.setTheme(newTheme);
     }
     setIsOpen(false); // Fermer après sélection
-  };
-
-  const handleReload = () => {
-    window.location.reload();
-  };
-
-  const handleFullscreen = () => {
-    if (window?.electronAPI?.toggleFullscreen) {
-      window.electronAPI.toggleFullscreen();
-    }
-  };
-
-  const handleDevTools = () => {
-    if (window?.electronAPI?.toggleDevTools) {
-      window.electronAPI.toggleDevTools();
-    }
   };
 
   return (
@@ -104,42 +88,7 @@ export default function ThemeSelector({ settings, onChange, onOpenJournal }) {
             🎨 Affichage
           </h3>
 
-          {/* 📝 Bouton Journal */}
-          <button
-            onClick={() => {
-              onOpenJournal && onOpenJournal();
-              setIsOpen(false);
-            }}
-            style={{
-              width: "100%",
-              padding: "10px",
-              marginBottom: "12px",
-              borderRadius: "8px",
-              cursor: "pointer",
-              background: currentTheme.primary,
-              color: currentTheme.text,
-              fontSize: "0.9rem",
-              fontWeight: "600",
-              border: `2px solid ${currentTheme.border}`,
-              transition: "all 0.2s ease",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "6px",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = currentTheme.primaryHover;
-              e.currentTarget.style.transform = "scale(1.02)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = currentTheme.primary;
-              e.currentTarget.style.transform = "scale(1)";
-            }}
-          >
-            📝 Journal
-          </button>
-
-          {/* 🔎 Curseur Taille de la grille */}
+          {/*  Curseur Taille de la grille */}
           <div
             style={{
               marginBottom: "16px",
@@ -172,93 +121,6 @@ export default function ThemeSelector({ settings, onChange, onOpenJournal }) {
               onChange={(e) => onChange({ ...settings, uiScale: parseFloat(e.target.value) })}
               style={{ width: "100%", cursor: "pointer" }}
             />
-          </div>
-
-          {/* Options du menu */}
-          <div
-            style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "16px" }}
-          >
-            <button
-              onClick={handleReload}
-              style={{
-                width: "100%",
-                padding: "10px",
-                borderRadius: "8px",
-                cursor: "pointer",
-                background: "rgba(128, 128, 128, 0.2)",
-                color: currentTheme.text,
-                fontSize: "0.85rem",
-                fontWeight: "600",
-                border: `1px solid ${currentTheme.border}`,
-                transition: "all 0.2s ease",
-                textAlign: "left",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "rgba(128, 128, 128, 0.3)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "rgba(128, 128, 128, 0.2)";
-              }}
-            >
-              🔄 Recharger
-            </button>
-            <button
-              onClick={handleFullscreen}
-              style={{
-                width: "100%",
-                padding: "10px",
-                borderRadius: "8px",
-                cursor: "pointer",
-                background: "rgba(128, 128, 128, 0.2)",
-                color: currentTheme.text,
-                fontSize: "0.85rem",
-                fontWeight: "600",
-                border: `1px solid ${currentTheme.border}`,
-                transition: "all 0.2s ease",
-                textAlign: "left",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "rgba(128, 128, 128, 0.3)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "rgba(128, 128, 128, 0.2)";
-              }}
-            >
-              ⛶ Plein écran
-            </button>
-            <button
-              onClick={handleDevTools}
-              style={{
-                width: "100%",
-                padding: "10px",
-                borderRadius: "8px",
-                cursor: "pointer",
-                background: "rgba(128, 128, 128, 0.2)",
-                color: currentTheme.text,
-                fontSize: "0.85rem",
-                fontWeight: "600",
-                border: `1px solid ${currentTheme.border}`,
-                transition: "all 0.2s ease",
-                textAlign: "left",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "rgba(128, 128, 128, 0.3)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "rgba(128, 128, 128, 0.2)";
-              }}
-            >
-              🔧 Outils de développement
-            </button>
           </div>
 
           <h4

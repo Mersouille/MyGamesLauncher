@@ -1263,6 +1263,13 @@ function createAppMenu(lang = "fr") {
       label: isFrench ? "❓ Aide" : "❓ Help",
       submenu: [
         {
+          label: isFrench ? "📝 Journal des conversations" : "📝 Conversation Journal",
+          click: () => {
+            win?.webContents.send("menu-open-journal");
+          },
+        },
+        { type: "separator" },
+        {
           label: isFrench ? "Rechercher des mises à jour" : "Check for Updates",
           click: async () => {
             try {
