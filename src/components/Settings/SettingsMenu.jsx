@@ -30,7 +30,51 @@ export default function SettingsMenu({ settings, onChange, onClose }) {
           textShadow: `0 0 8px ${currentTheme.shadow}`,
         }}
       >
-        🔑 Configuration API
+        �️ Affichage
+      </h3>
+
+      {/* 🔎 Taille de la grille (uiScale) */}
+      <div style={{ marginBottom: 20 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: 8,
+          }}
+        >
+          <p style={{ fontWeight: 500, margin: 0, color: currentTheme.text }}>
+            Taille de la grille
+          </p>
+          <span style={{ fontSize: 12, color: "#9ca3af" }}>
+            {Math.round((settings.uiScale ?? 1) * 100)}%
+          </span>
+        </div>
+        <input
+          type="range"
+          min={0.6}
+          max={1.2}
+          step={0.05}
+          value={typeof settings.uiScale === "number" ? settings.uiScale : 1}
+          onChange={(e) => onChange({ ...settings, uiScale: parseFloat(e.target.value) })}
+          style={{ width: "100%" }}
+        />
+        <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 6 }}>
+          Ajuste la taille des jaquettes dans la grille et en Big Picture (utile sur TV 4K).
+        </div>
+      </div>
+
+      <h3
+        style={{
+          textAlign: "center",
+          fontWeight: 600,
+          fontSize: "1.4rem",
+          marginBottom: "16px",
+          color: currentTheme.text,
+          textShadow: `0 0 8px ${currentTheme.shadow}`,
+        }}
+      >
+        �🔑 Configuration API
       </h3>
 
       {/* Info : Thème déplacé dans l'icône */}
