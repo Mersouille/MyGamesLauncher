@@ -29,6 +29,10 @@ export default function App() {
     musicEnabled: true, // ✅ Activé par défaut - démarre automatiquement
     currentTrack: "track1",
     musicVolume: 0.15, // 🔉 Volume initial réduit (15%)
+    uiScale:
+      typeof window !== "undefined" && window?.screen?.width >= 3000
+        ? 0.8 // 🔽 Réduction légère par défaut sur écrans 4K
+        : 1,
   });
   const [isBigPicture, setIsBigPicture] = useState(false); // 📺 Etat Big Picture
   const [showSettings, setShowSettings] = useState(false);
@@ -682,6 +686,7 @@ export default function App() {
               <GameGrid
                 games={filteredGames}
                 theme={settings.theme}
+                uiScale={settings.uiScale}
                 onLaunch={handleLaunchGame}
                 onDelete={(game) => {
                   setGames((prev) => prev.filter((g) => g.id !== game.id));
@@ -719,6 +724,7 @@ export default function App() {
             games={games}
             theme={settings.theme}
             initialCategory={currentCategory}
+            uiScale={settings.uiScale}
             onClose={() => setIsBigPicture(false)}
             onLaunchGame={(g) => handleLaunchGame(g)}
           />

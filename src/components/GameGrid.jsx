@@ -12,6 +12,7 @@ const GameGrid = ({
   onShowDetails,
   onAddToCollection,
   theme,
+  uiScale = 1,
   isModalOpen = false, // 🎮 Désactiver la navigation si un modal externe est ouvert
 }) => {
   const currentTheme = getTheme(theme || "dark");
@@ -271,12 +272,22 @@ const GameGrid = ({
                 transform: isSelected ? "scale(1.1)" : "scale(1)",
                 // 📺 Responsive 4K: taille des cartes dynamique en fonction de la largeur écran
                 width:
-                  Math.max(160, Math.round(256 * Math.min(1, 1920 / (window.innerWidth || 1920)))) +
-                  "px",
+                  Math.round(
+                    uiScale *
+                      Math.max(
+                        140,
+                        Math.round(256 * Math.min(1, 1920 / (window.innerWidth || 1920)))
+                      )
+                  ) + "px",
                 height:
-                  Math.max(160, Math.round(256 * Math.min(1, 1920 / (window.innerWidth || 1920)))) *
-                    1.5 +
-                  "px",
+                  Math.round(
+                    uiScale *
+                      Math.max(
+                        140,
+                        Math.round(256 * Math.min(1, 1920 / (window.innerWidth || 1920)))
+                      ) *
+                      1.5
+                  ) + "px",
               }}
               onMouseEnter={(e) => {
                 if (!isSelected) {

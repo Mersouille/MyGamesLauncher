@@ -420,7 +420,7 @@ ipcMain.handle("download-image", async (_, { url, filename }) => {
 
     // Assure que le dossier covers existe (dans userData en production)
     const coversDir = path.join(app.getPath("userData"), "covers");
-    if (!fs.existsSync(coversDir)) fs.mkdirSync(coversDir, { recursive: true });
+    ensureDirectory(coversDir);
 
     // Utilise fetch (Node 18+ / Electron) pour récupérer l'image
     const res = await fetch(url);
@@ -752,8 +752,8 @@ ipcMain.handle("sgdb-download-first-grid", async (_, { apiKey, term, filenamePre
 
     // 4) téléchargement (réplique la logique de download-image pour rester synchrone ici)
     try {
-      const coversDir = path.join(__dirname, "covers");
-      if (!fs.existsSync(coversDir)) fs.mkdirSync(coversDir, { recursive: true });
+      const coversDir = path.join(app.getPath("userData"), "covers");
+      ensureDirectory(coversDir);
       const resImg = await fetch(imageUrl);
       if (!resImg.ok) throw new Error(`HTTP ${resImg.status} ${resImg.statusText}`);
       const arrayBufferImg = await resImg.arrayBuffer();
@@ -833,7 +833,7 @@ ipcMain.handle("sgdb-get-all-grids", async (_, { apiKey, term }) => {
 
     // Télécharger les miniatures et servir via local://
     const tempDir = path.join(app.getPath("userData"), "covers", "temp");
-    if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
+    ensureDirectory(tempDir);
 
     // Limiter à 4 jaquettes et télécharger les miniatures
     const gridPromises = filteredGrids.slice(0, 4).map(async (g, index) => {
@@ -905,7 +905,7 @@ ipcMain.handle("sgdb-download-grid-by-url", async (_, { url, filenamePrefix = ""
 
     // ✅ Utiliser userData au lieu de __dirname (qui est en lecture seule en production)
     const coversDir = path.join(app.getPath("userData"), "covers");
-    if (!fs.existsSync(coversDir)) fs.mkdirSync(coversDir, { recursive: true });
+    ensureDirectory(coversDir);
 
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
@@ -923,6 +923,28 @@ ipcMain.handle("sgdb-download-grid-by-url", async (_, { url, filenamePrefix = ""
     return { success: false, error: err.message || String(err) };
   }
 });
+
+// ------------------------------------------------------------
+// 🔧 Utilitaire: garantit qu'un chemin est un dossier (répare ENOTDIR)
+function ensureDirectory(dirPath) {
+  try {
+    if (fs.existsSync(dirPath)) {
+      const st = fs.statSync(dirPath);
+      if (!st.isDirectory()) {
+        // S'il existe un fichier à la place du dossier, on le renomme en .bak
+        const bak = dirPath + ".bak-" + Date.now();
+        fs.renameSync(dirPath, bak);
+        fs.mkdirSync(dirPath, { recursive: true });
+        console.warn(`⚠️ '${dirPath}' était un fichier. Renommé en '${bak}' et dossier recréé.`);
+      }
+    } else {
+      fs.mkdirSync(dirPath, { recursive: true });
+    }
+  } catch (e) {
+    console.error("❌ ensureDirectory error:", e);
+    throw e;
+  }
+}
 
 // ------------------------------------------------------------
 // 🗂️ Liste des catégories pour Electron
@@ -1248,8 +1270,18 @@ function createAppMenu(lang = "fr") {
               await autoUpdater.checkForUpdates();
             } catch (e) {
               const msg = e?.message || String(e);
-              // 🧹 Silencieux si 404 (aucune release) ou repo privé
-              if (msg.includes("404") || msg.toLowerCase().includes("releases.atom")) {
+              // 🧹 Silencieux si cas fréquents: 404/no feed/private/no publisher
+              const m = msg.toLowerCase();
+              const isBenign =
+                m.includes("404") ||
+                m.includes("releases.atom") ||
+                m.includes("cannot find") ||
+                m.includes("latest.yml") ||
+                m.includes("no published versions") ||
+                m.includes("feedurl is not set") ||
+                m.includes("enoent") ||
+                m.includes("enotfound");
+              if (isBenign) {
                 dialog.showMessageBox({
                   type: "info",
                   title: isFrench ? "Mise à jour" : "Update",

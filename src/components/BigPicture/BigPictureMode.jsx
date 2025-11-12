@@ -14,6 +14,7 @@ export default function BigPictureMode({
   games = [],
   theme = "dark",
   initialCategory = "Tous les jeux",
+  uiScale = 1,
   onClose,
   onLaunchGame,
 }) {
@@ -43,7 +44,8 @@ export default function BigPictureMode({
   const [cols, setCols] = useState(getCols());
   const getCardSize = () => {
     const w = window.innerWidth || 1920;
-    const cardW = Math.round(Math.min(320, Math.max(200, w / 14)));
+    const base = Math.min(320, Math.max(200, w / 14));
+    const cardW = Math.round(base * uiScale);
     const cardH = Math.round(cardW * 1.5);
     return { cardW, cardH };
   };

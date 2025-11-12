@@ -65,24 +65,34 @@ export function useBackgroundMusic(settings = {}, onSettingsChange) {
     const loadTrack = () => {
       isLoadingRef.current = true;
       try {
-        // Arrêter et remplacer la source proprement
+        // Arrêter proprement sans déclencher une nouvelle lecture immédiate
         audioRef.current.pause();
-        audioRef.current.src = track.file;
+        // Vider l'ancienne source pour éviter l'interruption race (DOMException)
+        audioRef.current.removeAttribute("src");
         audioRef.current.load();
 
-        const onCanPlay = () => {
-          audioRef.current.removeEventListener("canplay", onCanPlay);
-          if (wasPlaying) {
-            audioRef.current
-              .play()
-              .then(() => setIsPlaying(true))
-              .catch((err) => console.warn("⚠️ Lecture auto échouée:", err))
-              .finally(() => (isLoadingRef.current = false));
-          } else {
-            isLoadingRef.current = false;
-          }
-        };
-        audioRef.current.addEventListener("canplay", onCanPlay, { once: true });
+        // Appliquer la nouvelle source puis attendre canplay + petit timeout de stabilisation
+        setTimeout(() => {
+          audioRef.current.src = track.file;
+          audioRef.current.load();
+
+          const onCanPlay = () => {
+            audioRef.current.removeEventListener("canplay", onCanPlay);
+            // Attendre un micro tick pour éviter le conflit "play() interrupted by load request"
+            setTimeout(() => {
+              if (wasPlaying && settings.musicEnabled) {
+                audioRef.current
+                  .play()
+                  .then(() => setIsPlaying(true))
+                  .catch((err) => console.warn("⚠️ Lecture auto échouée:", err))
+                  .finally(() => (isLoadingRef.current = false));
+              } else {
+                isLoadingRef.current = false;
+              }
+            }, 50); // court délai pour laisser la source se stabiliser
+          };
+          audioRef.current.addEventListener("canplay", onCanPlay, { once: true });
+        }, 30); // délai initial pour s'assurer que l'ancienne lecture est bien stoppée
       } catch (e) {
         console.warn("⚠️ Erreur lors du chargement de la piste:", e);
         isLoadingRef.current = false;
