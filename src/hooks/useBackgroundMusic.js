@@ -12,22 +12,28 @@ export function useBackgroundMusic(settings = {}, onSettingsChange) {
   const isLoadingRef = useRef(false); // 🔒 Flag pour éviter les doubles play()
 
   // Liste des pistes disponibles (à placer dans public/music/)
-  const tracks = [
+  const tracks = useRef([
     { id: "track1", name: "Ambiance 1", file: "./music/track1.mp3" },
     { id: "track2", name: "Ambiance 2", file: "./music/track2.mp3" },
     { id: "track3", name: "Ambiance 3", file: "./music/track3.mp3" },
     { id: "track4", name: "Ambiance 4", file: "./music/track4.mp3" },
-  ];
+  ]).current;
 
   // Fonction pour obtenir une piste aléatoire
   const getRandomTrack = useCallback(() => {
     const randomIndex = Math.floor(Math.random() * tracks.length);
     return tracks[randomIndex].id;
-  }, []);
+  }, [tracks]);
 
-  // État initial : piste aléatoire si pas définie
+  // État initial : piste aléatoire si pas définie (ne s'exécute qu'une fois)
   const [currentTrack, setCurrentTrack] = useState(() => {
-    return settings.currentTrack || getRandomTrack();
+    return (
+      settings.currentTrack ||
+      (() => {
+        const randomIndex = Math.floor(Math.random() * tracks.length);
+        return tracks[randomIndex].id;
+      })()
+    );
   });
 
   // Initialiser l'audio au montage
@@ -55,15 +61,17 @@ export function useBackgroundMusic(settings = {}, onSettingsChange) {
     };
   }, [getRandomTrack, currentTrack]); // ✅ Réattacher quand currentTrack change
 
-  // Charger la piste actuelle quand elle change (évite l'erreur play() interrompu)
+  // Charger la piste actuelle UNIQUEMENT quand currentTrack change (pas settings!)
   useEffect(() => {
     if (!audioRef.current || !currentTrack) return;
 
     const track = tracks.find((t) => t.id === currentTrack) || tracks[0];
-    const wasPlaying = !audioRef.current.paused || settings.musicEnabled;
+    const wasPlaying = !audioRef.current.paused;
 
     const loadTrack = () => {
       isLoadingRef.current = true;
+      console.log("🎵 Chargement de la piste:", track.name);
+
       try {
         // Arrêter proprement sans déclencher une nouvelle lecture immédiate
         audioRef.current.pause();
@@ -80,7 +88,7 @@ export function useBackgroundMusic(settings = {}, onSettingsChange) {
             audioRef.current.removeEventListener("canplay", onCanPlay);
             // Attendre un micro tick pour éviter le conflit "play() interrupted by load request"
             setTimeout(() => {
-              if (wasPlaying && settings.musicEnabled) {
+              if (wasPlaying) {
                 audioRef.current
                   .play()
                   .then(() => setIsPlaying(true))
@@ -104,7 +112,7 @@ export function useBackgroundMusic(settings = {}, onSettingsChange) {
     } else {
       loadTrack();
     }
-  }, [currentTrack, settings.musicEnabled, tracks]);
+  }, [currentTrack]); // ⚠️ SEULEMENT currentTrack - PAS settings!
 
   // Gérer l'activation/désactivation de la musique (UNIQUEMENT au changement du toggle)
   const musicEnabledRef = useRef(settings.musicEnabled);
@@ -128,6 +136,13 @@ export function useBackgroundMusic(settings = {}, onSettingsChange) {
     }
   }, [settings.musicEnabled]);
 
+  // Ref pour avoir toujours les derniers settings sans déclencher de re-renders
+  const settingsRef = useRef(settings);
+  settingsRef.current = settings;
+
+  const onSettingsChangeRef = useRef(onSettingsChange);
+  onSettingsChangeRef.current = onSettingsChange;
+
   // Jouer
   const play = useCallback(() => {
     if (audioRef.current) {
@@ -135,22 +150,22 @@ export function useBackgroundMusic(settings = {}, onSettingsChange) {
         console.error("❌ Erreur lecture musique:", err);
       });
       setIsPlaying(true);
-      if (onSettingsChange) {
-        onSettingsChange({ ...settings, musicEnabled: true });
+      if (onSettingsChangeRef.current) {
+        onSettingsChangeRef.current({ ...settingsRef.current, musicEnabled: true });
       }
     }
-  }, [settings, onSettingsChange]);
+  }, []); // ✅ Pas de dépendances - utilise refs
 
   // Pause
   const pause = useCallback(() => {
     if (audioRef.current) {
       audioRef.current.pause();
       setIsPlaying(false);
-      if (onSettingsChange) {
-        onSettingsChange({ ...settings, musicEnabled: false });
+      if (onSettingsChangeRef.current) {
+        onSettingsChangeRef.current({ ...settingsRef.current, musicEnabled: false });
       }
     }
-  }, [settings, onSettingsChange]);
+  }, []); // ✅ Pas de dépendances - utilise refs
 
   // Stop (pause + retour au début)
   const stop = useCallback(() => {
@@ -158,22 +173,22 @@ export function useBackgroundMusic(settings = {}, onSettingsChange) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
       setIsPlaying(false);
-      if (onSettingsChange) {
-        onSettingsChange({ ...settings, musicEnabled: false });
+      if (onSettingsChangeRef.current) {
+        onSettingsChangeRef.current({ ...settingsRef.current, musicEnabled: false });
       }
     }
-  }, [settings, onSettingsChange]);
+  }, []); // ✅ Pas de dépendances - utilise refs
 
   // Changer de piste
   const changeTrack = useCallback(
     (trackId) => {
       // Ne pas toucher directement à l'élément audio ici
       setCurrentTrack(trackId);
-      if (onSettingsChange) {
-        onSettingsChange({ ...settings, currentTrack: trackId });
+      if (onSettingsChangeRef.current) {
+        onSettingsChangeRef.current({ ...settingsRef.current, currentTrack: trackId });
       }
     },
-    [settings, onSettingsChange]
+    [] // ✅ Pas de dépendances - utilise refs
   );
 
   // Piste suivante
@@ -181,19 +196,19 @@ export function useBackgroundMusic(settings = {}, onSettingsChange) {
     const currentIndex = tracks.findIndex((t) => t.id === currentTrack);
     const nextIndex = (currentIndex + 1) % tracks.length;
     changeTrack(tracks[nextIndex].id);
-  }, [currentTrack, changeTrack]);
+  }, [currentTrack, changeTrack, tracks]);
 
   // Changer le volume
   const changeVolume = useCallback(
     (volume) => {
       if (audioRef.current) {
         audioRef.current.volume = Math.max(0, Math.min(1, volume));
-        if (onSettingsChange) {
-          onSettingsChange({ ...settings, musicVolume: volume });
+        if (onSettingsChangeRef.current) {
+          onSettingsChangeRef.current({ ...settingsRef.current, musicVolume: volume });
         }
       }
     },
-    [settings, onSettingsChange]
+    [] // ✅ Pas de dépendances - utilise refs
   );
 
   return {
