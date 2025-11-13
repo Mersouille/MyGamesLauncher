@@ -319,15 +319,11 @@ C:\Users\[Utilisateur]\AppData\Local\Programs\MyGames Launcher\MyGames Launcher.
 
 C:\Users\[Utilisateur]\AppData\Local\Programs\MyGames Launcher\MyGames Launcher.exe
 
-````
-
----
-
 ### 5.3 Lister les dossiers liés à l'application
 
 ```powershell
 Get-ChildItem "$env:LOCALAPPDATA" -Directory | Where-Object {$_.Name -like "*MyGames*" -or $_.Name -like "*mygames*"} | Select-Object FullName
-````
+```
 
 **Explication :** Liste tous les dossiers dans AppData\Local contenant "MyGames" dans leur nom.
 
@@ -370,9 +366,7 @@ Le dossier `userData` contient toutes les données de l'application (jeux, param
 
 **Chemin typique :**
 
-```
 C:\Users\[Utilisateur]\AppData\Roaming\MyGames Launcher\
-```
 
 **Contenu :**
 
@@ -540,7 +534,7 @@ Vous devez avoir :
 
 #### Étape 7 : Créer la release GitHub
 
-1. Aller sur https://github.com/Mersouille/MyGamesLauncher/releases/new
+1. Aller sur <https://github.com/Mersouille/MyGamesLauncher/releases/new>
 2. Sélectionner le tag `v1.8.5`
 3. Titre : `Version 1.8.5`
 4. Description : Décrire les changements
@@ -565,7 +559,7 @@ Puis cliquer sur "Aide" → "Rechercher des mises à jour"
 
 ### Problème : "npm : command not found"
 
-**Solution :** Installer Node.js depuis https://nodejs.org/
+**Solution :** Installer Node.js depuis <https://nodejs.org/>
 
 ---
 
