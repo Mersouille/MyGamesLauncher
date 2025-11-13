@@ -313,9 +313,13 @@ Get-ChildItem "$env:LOCALAPPDATA\Programs" -Recurse -Filter "*MyGames*.exe" -Err
 
 **Résultat typique :**
 
-```
+```text
 C:\Users\[Utilisateur]\AppData\Local\Programs\MyGames Launcher\MyGames Launcher.exe
 ```
+
+C:\Users\[Utilisateur]\AppData\Local\Programs\MyGames Launcher\MyGames Launcher.exe
+
+````
 
 ---
 
@@ -323,7 +327,7 @@ C:\Users\[Utilisateur]\AppData\Local\Programs\MyGames Launcher\MyGames Launcher.
 
 ```powershell
 Get-ChildItem "$env:LOCALAPPDATA" -Directory | Where-Object {$_.Name -like "*MyGames*" -or $_.Name -like "*mygames*"} | Select-Object FullName
-```
+````
 
 **Explication :** Liste tous les dossiers dans AppData\Local contenant "MyGames" dans leur nom.
 
@@ -653,11 +657,11 @@ npm update electron
 
 ## 📚 Ressources supplémentaires
 
-- **Documentation PowerShell :** https://docs.microsoft.com/powershell/
-- **Documentation Git :** https://git-scm.com/doc
-- **Documentation npm :** https://docs.npmjs.com/
-- **Documentation Electron :** https://www.electronjs.org/docs
-- **Documentation electron-builder :** https://www.electron.build/
+- **Documentation PowerShell :** <https://docs.microsoft.com/powershell/>
+- **Documentation Git :** <https://git-scm.com/doc>
+- **Documentation npm :** <https://docs.npmjs.com/>
+- **Documentation Electron :** <https://www.electronjs.org/docs>
+- **Documentation electron-builder :** <https://www.electron.build/>
 
 ---
 
