@@ -179,8 +179,8 @@ Relancer la console ensuite.
 
 ## 12. Ressources
 
-- electron-builder publish docs: https://www.electron.build/configuration/publish
-- electron-updater: https://www.electron.build/auto-update
+- electron-builder publish docs: <https://www.electron.build/configuration/publish>
+- electron-updater: <https://www.electron.build/auto-update>
 - NSIS config: Voir section `build.nsis` dans `package.json`
 
 ---

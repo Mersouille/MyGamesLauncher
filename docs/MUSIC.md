@@ -4,9 +4,7 @@
 
 Place tes fichiers MP3 dans le dossier suivant :
 
-```
 public/music/
-```
 
 ## 2. Nommer les fichiers
 
@@ -28,10 +26,10 @@ Tu peux en ajouter plus en modifiant le tableau `tracks` dans le hook.
 
 ## 4. Sources de musique libre
 
-- **Pixabay Music** : https://pixabay.com/music/
-- **Incompetech** : https://incompetech.com/music/
-- **Free Music Archive** : https://freemusicarchive.org/
-- **YouTube Audio Library** : https://studio.youtube.com/
+- **Pixabay Music** : <https://pixabay.com/music/>
+- **Incompetech** : <https://incompetech.com/music/>
+- **Free Music Archive** : <https://freemusicarchive.org/>
+- **YouTube Audio Library** : <https://studio.youtube.com/>
 
 ## 5. Ajouter plus de pistes
 
