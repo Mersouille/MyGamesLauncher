@@ -886,6 +886,7 @@ export default function App() {
                         rating: details.rating,
                         notes: details.notes,
                         category: details.category,
+                        displayName: details.displayName,
                       }
                     : g
                 )

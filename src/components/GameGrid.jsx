@@ -446,8 +446,8 @@ const GameGrid = ({
           setModalOpen(false);
           setCurrentGame(null);
         }}
-        gameName={currentGame?.name}
-        term={currentGame?.name}
+        gameName={currentGame?.displayName || currentGame?.name}
+        term={currentGame?.displayName || currentGame?.name}
         onSelect={async (grid) => {
           try {
             setLoadingId(currentGame.id);

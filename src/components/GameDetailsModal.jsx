@@ -15,6 +15,7 @@ export default function GameDetailsModal({ game, isOpen, onClose, onSave }) {
   const [rating, setRating] = useState(game?.rating || 0);
   const [notes, setNotes] = useState(game?.notes || "");
   const [category, setCategory] = useState(game?.category || "Action / Aventure");
+  const [displayName, setDisplayName] = useState(game?.displayName || game?.name || "");
   const [hoveredStar, setHoveredStar] = useState(0);
   const { gamepadConnected, registerListener } = useGamepad();
 
@@ -29,6 +30,7 @@ export default function GameDetailsModal({ game, isOpen, onClose, onSave }) {
       setRating(game.rating || 0);
       setNotes(game.notes || "");
       setCategory(game.category || "Action / Aventure");
+      setDisplayName(game.displayName || game.name || "");
     }
   }, [game]);
 
@@ -66,6 +68,7 @@ export default function GameDetailsModal({ game, isOpen, onClose, onSave }) {
       rating,
       notes,
       category,
+      displayName,
     });
     onClose();
   };
@@ -190,6 +193,23 @@ export default function GameDetailsModal({ game, isOpen, onClose, onSave }) {
                       </option>
                     ))}
                 </select>
+              </div>
+
+              {/* Nom d'affichage pour recherche */}
+              <div>
+                <label className="block text-white font-semibold mb-3 text-lg">
+                  🎮 Nom pour recherche de jaquette
+                </label>
+                <input
+                  type="text"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder="Nom du jeu (ex: Grand Theft Auto V)"
+                  className="w-full bg-gray-800 text-white border-2 border-gray-700 rounded-lg p-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                />
+                <p className="text-gray-400 text-sm mt-2">
+                  💡 Ce nom sera utilisé pour rechercher la jaquette sur SteamGridDB
+                </p>
               </div>
 
               {/* Note */}
