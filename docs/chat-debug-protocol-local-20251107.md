@@ -7,7 +7,7 @@ Date : 7 novembre 2025
 Correction du protocole `local://` pour l'affichage des jaquettes stockées dans le dossier `/covers`.
 Message dans le terminal : ✅ mais erreur dans DevTools :
 
-```
+```bash
 Refused to connect to 'local://covers/xxx.jpg' because it violates the Content Security Policy
 ```
 
