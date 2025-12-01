@@ -113,7 +113,11 @@ export default function GameDetailsModal({ game, isOpen, onClose, onSave }) {
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
             transition={{ type: "spring", damping: 25 }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-gray-900 rounded-2xl shadow-2xl max-w-2xl w-full mx-4 overflow-hidden border-2 border-gray-700"
+            className="bg-gray-900 rounded-2xl shadow-2xl max-w-lg w-full mx-4 overflow-hidden border-2 border-gray-700 max-h-[85vh] overflow-y-auto"
+            style={{
+              scrollbarWidth: "thin",
+              scrollbarColor: "rgba(139, 92, 246, 0.6) rgba(30, 30, 30, 0.5)",
+            }}
           >
             {/* Header */}
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white">

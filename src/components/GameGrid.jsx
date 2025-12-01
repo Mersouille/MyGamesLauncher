@@ -13,6 +13,9 @@ const GameGrid = ({
   onAddToCollection,
   theme,
   uiScale = 1,
+  gridColumns = 6, // 🆕 Nombre de colonnes dynamique
+  cardWidth = 200, // 🆕 Largeur des cartes dynamique
+  cardHeight = 300, // 🆕 Hauteur des cartes dynamique
   isModalOpen = false, // 🎮 Désactiver la navigation si un modal externe est ouvert
 }) => {
   const currentTheme = getTheme(theme || "dark");
@@ -246,7 +249,10 @@ const GameGrid = ({
     >
       <div
         ref={gridRef}
-        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-8 w-full max-w-[98vw]"
+        className="grid gap-8 w-full max-w-[98vw]"
+        style={{
+          gridTemplateColumns: `repeat(${gridColumns}, minmax(0, 1fr))`,
+        }}
       >
         {sortedGames.map((game, index) => {
           // Priorité : jaquette dans /covers via local:// si disponible, sinon icône encodée en base64
@@ -270,24 +276,9 @@ const GameGrid = ({
                   ? `0 0 32px ${currentTheme.accent}, 0 12px 40px ${currentTheme.shadow}`
                   : `0 4px 16px ${currentTheme.shadow}`,
                 transform: isSelected ? "scale(1.1)" : "scale(1)",
-                // 📺 Responsive 4K: taille des cartes dynamique en fonction de la largeur écran
-                width:
-                  Math.round(
-                    uiScale *
-                      Math.max(
-                        140,
-                        Math.round(256 * Math.min(1, 1920 / (window.innerWidth || 1920)))
-                      )
-                  ) + "px",
-                height:
-                  Math.round(
-                    uiScale *
-                      Math.max(
-                        140,
-                        Math.round(256 * Math.min(1, 1920 / (window.innerWidth || 1920)))
-                      ) *
-                      1.5
-                  ) + "px",
+                // 📺 Taille des cartes calculée dynamiquement par useResponsive
+                width: `${cardWidth}px`,
+                height: `${cardHeight}px`,
               }}
               onMouseEnter={(e) => {
                 if (!isSelected) {

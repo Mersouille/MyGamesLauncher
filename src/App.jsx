@@ -14,6 +14,7 @@ import AchievementNotification from "./components/Achievements/AchievementNotifi
 import ControllerProfilesManager from "./components/Controllers/ControllerProfilesManager"; // 🎮 Gestionnaire de profils de contrôleurs
 import ThemeSelector from "./components/Settings/ThemeSelector"; // 🎨 Sélecteur rapide de thème
 import BigPictureMode from "./components/BigPicture/BigPictureMode"; // 📺 Mode Big Picture
+import { useResponsive } from "./hooks/useResponsive"; // 📱 Hook pour le responsive design
 import MusicPlayer from "./components/MusicPlayer"; // 🎵 Lecteur de musique
 import { useBackgroundMusic } from "./hooks/useBackgroundMusic"; // 🎵 Hook musique
 import { motion, AnimatePresence } from "framer-motion";
@@ -23,25 +24,16 @@ import { themes, getTheme } from "./data/themes"; // 🎨 Import des thèmes
 import useAchievements from "./hooks/useAchievements"; // 🏆 Hook achievements
 
 export default function App() {
+  // 📱 Hook responsive pour adapter l'affichage dynamiquement
+  const responsive = useResponsive();
+
   const [games, setGames] = useState([]);
   const [settings, setSettings] = useState({
     theme: "dark",
     musicEnabled: true, // ✅ Activé par défaut - démarre automatiquement
     currentTrack: "track1",
     musicVolume: 0.15, // 🔉 Volume initial réduit (15%)
-    uiScale: (() => {
-      if (typeof window === "undefined") return 1;
-      const width = window?.screen?.width || 1920;
-      const height = window?.screen?.height || 1080;
-
-      // 📺 Détection TV 4K (3840x2160 ou supérieur)
-      if (width >= 3840 && height >= 2160) {
-        return 0.65; // 🔽 Réduction importante pour TV 4K 65 pouces
-      } else if (width >= 3000) {
-        return 0.8; // 🔽 Réduction légère pour moniteurs 4K
-      }
-      return 1; // ✅ Taille normale pour 1080p/1440p
-    })(),
+    uiScale: 1, // Sera remplacé par responsive.uiScale
   });
   const [isBigPicture, setIsBigPicture] = useState(false); // 📺 Etat Big Picture
   const [showSettings, setShowSettings] = useState(false);
@@ -701,7 +693,10 @@ export default function App() {
               <GameGrid
                 games={filteredGames}
                 theme={settings.theme}
-                uiScale={settings.uiScale}
+                uiScale={responsive.uiScale}
+                gridColumns={responsive.gridColumns}
+                cardWidth={responsive.cardWidth}
+                cardHeight={responsive.cardHeight}
                 onLaunch={handleLaunchGame}
                 onDelete={(game) => {
                   setGames((prev) => prev.filter((g) => g.id !== game.id));
@@ -739,7 +734,7 @@ export default function App() {
             games={games}
             theme={settings.theme}
             initialCategory={currentCategory}
-            uiScale={settings.uiScale}
+            uiScale={responsive.uiScale}
             onClose={() => setIsBigPicture(false)}
             onLaunchGame={(g) => handleLaunchGame(g)}
           />
@@ -994,6 +989,8 @@ export default function App() {
           onPause={music.pause}
           onChangeTrack={music.changeTrack}
           onVolumeChange={music.changeVolume}
+          onForward={music.forward}
+          onBackward={music.backward}
           volume={settings.musicVolume || 0.15}
           theme={getTheme(settings.theme)}
         />

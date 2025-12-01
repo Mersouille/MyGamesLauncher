@@ -114,6 +114,25 @@ export function useBackgroundMusic(settings = {}, onSettingsChange) {
     }
   }, [currentTrack]); // ⚠️ SEULEMENT currentTrack - PAS settings!
 
+  // 🎵 Démarrage automatique au premier chargement si musicEnabled est true
+  const hasAutoStartedRef = useRef(false);
+
+  useEffect(() => {
+    if (!hasAutoStartedRef.current && settings.musicEnabled && audioRef.current) {
+      hasAutoStartedRef.current = true;
+      // Attendre un court instant pour que la piste soit chargée
+      setTimeout(() => {
+        if (audioRef.current && audioRef.current.paused) {
+          console.log("🎵 Démarrage automatique de la musique...");
+          audioRef.current.play().catch((err) => {
+            console.warn("⚠️ Impossible de lancer la musique automatiquement:", err);
+          });
+          setIsPlaying(true);
+        }
+      }, 500);
+    }
+  }, [settings.musicEnabled]);
+
   // Gérer l'activation/désactivation de la musique (UNIQUEMENT au changement du toggle)
   const musicEnabledRef = useRef(settings.musicEnabled);
 
@@ -211,6 +230,33 @@ export function useBackgroundMusic(settings = {}, onSettingsChange) {
     [] // ✅ Pas de dépendances - utilise refs
   );
 
+  // ⏩ Avancer de X secondes
+  const forward = useCallback((seconds = 10) => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = Math.min(
+        audioRef.current.duration,
+        audioRef.current.currentTime + seconds
+      );
+    }
+  }, []);
+
+  // ⏪ Reculer de X secondes
+  const backward = useCallback((seconds = 10) => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - seconds);
+    }
+  }, []);
+
+  // 📍 Obtenir la position actuelle
+  const getCurrentTime = useCallback(() => {
+    return audioRef.current ? audioRef.current.currentTime : 0;
+  }, []);
+
+  // ⏱️ Obtenir la durée totale
+  const getDuration = useCallback(() => {
+    return audioRef.current ? audioRef.current.duration : 0;
+  }, []);
+
   return {
     play,
     pause,
@@ -218,6 +264,10 @@ export function useBackgroundMusic(settings = {}, onSettingsChange) {
     nextTrack,
     changeTrack,
     changeVolume,
+    forward,
+    backward,
+    getCurrentTime,
+    getDuration,
     currentTrack,
     isPlaying,
     tracks,

@@ -281,6 +281,8 @@ export default function Sidebar({
         borderRight: "1px solid #333",
         height: "100vh",
         position: "relative",
+        overflowY: "auto", // 📜 Permet le scroll vertical
+        overflowX: "hidden", // Empêche le scroll horizontal
       }}
     >
       {/* 🎮 Indicateur manette + Aide navigation en haut */}

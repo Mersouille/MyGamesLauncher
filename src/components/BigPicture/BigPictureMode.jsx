@@ -34,17 +34,21 @@ export default function BigPictureMode({
     return games.filter((g) => (g.category || "Tous les jeux") === cat);
   }, [games, categoryIndex]);
 
-  // 📺 Colonnes et taille cartes dynamiques (optimisées 4K)
+  // 📺 Colonnes et taille cartes dynamiques (optimisées 4K) - Tailles augmentées
   const getCols = () => {
     const w = window.innerWidth || 1920;
-    const baseCard = Math.round(Math.min(320, Math.max(200, w / 14))); // ~14 colonnes virtuelles
-    const cols = Math.max(4, Math.min(10, Math.floor((w - 280) / (baseCard + 24))));
-    return cols;
+    // 🎮 TV 4K : 8 colonnes, Full HD : 5 colonnes, Réduit : 3 colonnes
+    if (w >= 3840) return 8;
+    if (w >= 2560) return 6;
+    if (w >= 1920) return 5;
+    if (w >= 1280) return 4;
+    return 3;
   };
   const [cols, setCols] = useState(getCols());
   const getCardSize = () => {
     const w = window.innerWidth || 1920;
-    const base = Math.min(320, Math.max(200, w / 14));
+    // 🎮 Cartes plus grandes : 280-400px selon la largeur d'écran
+    const base = w >= 3840 ? 380 : w >= 2560 ? 340 : w >= 1920 ? 300 : 250;
     const cardW = Math.round(base * uiScale);
     const cardH = Math.round(cardW * 1.5);
     return { cardW, cardH };

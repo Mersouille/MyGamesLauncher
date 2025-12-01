@@ -12,6 +12,8 @@ export default function MusicPlayer({
   onPause,
   onChangeTrack,
   onVolumeChange,
+  onForward,
+  onBackward,
   volume = 0.15,
   theme,
 }) {
@@ -125,34 +127,107 @@ export default function MusicPlayer({
         🎵
       </button>
 
-      {/* Mini bouton play/pause */}
-      <button
-        onClick={isPlaying ? onPause : onPlay}
-        title={isPlaying ? "Pause" : "Play"}
+      {/* Contrôles de lecture */}
+      <div
         style={{
-          width: 40,
-          height: 40,
-          borderRadius: "50%",
-          background: theme?.cardBg || "rgba(30,30,30,0.9)",
-          color: theme?.text || "#fff",
-          fontSize: 16,
-          border: `2px solid ${theme?.border || "#444"}`,
-          cursor: "pointer",
           display: "flex",
+          gap: 8,
           alignItems: "center",
-          justifyContent: "center",
-          boxShadow: `0 4px 12px ${theme?.shadow || "rgba(0,0,0,0.3)"}`,
-          transition: "transform 0.2s",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = "scale(1.1)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = "scale(1)";
         }}
       >
-        {isPlaying ? "⏸️" : "▶️"}
-      </button>
+        {/* Bouton Reculer */}
+        <button
+          onClick={() => onBackward?.(10)}
+          title="Reculer de 10s"
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: "50%",
+            background: theme?.cardBg || "rgba(30,30,30,0.9)",
+            color: theme?.text || "#fff",
+            fontSize: 14,
+            border: `2px solid ${theme?.border || "#444"}`,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: `0 4px 12px ${theme?.shadow || "rgba(0,0,0,0.3)"}`,
+            transition: "transform 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "scale(1.15)";
+            e.currentTarget.style.background = theme?.accent || "#00d4ff";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "scale(1)";
+            e.currentTarget.style.background = theme?.cardBg || "rgba(30,30,30,0.9)";
+          }}
+        >
+          ⏪
+        </button>
+
+        {/* Bouton Play/Pause */}
+        <button
+          onClick={isPlaying ? onPause : onPlay}
+          title={isPlaying ? "Pause" : "Play"}
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: "50%",
+            background: theme?.cardBg || "rgba(30,30,30,0.9)",
+            color: theme?.text || "#fff",
+            fontSize: 18,
+            border: `2px solid ${theme?.accent || "#00d4ff"}`,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: `0 4px 12px ${theme?.shadow || "rgba(0,0,0,0.3)"}`,
+            transition: "transform 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "scale(1.15)";
+            e.currentTarget.style.boxShadow = `0 0 20px ${theme?.accent || "#00d4ff"}`;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "scale(1)";
+            e.currentTarget.style.boxShadow = `0 4px 12px ${theme?.shadow || "rgba(0,0,0,0.3)"}`;
+          }}
+        >
+          {isPlaying ? "⏸️" : "▶️"}
+        </button>
+
+        {/* Bouton Avancer */}
+        <button
+          onClick={() => onForward?.(10)}
+          title="Avancer de 10s"
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: "50%",
+            background: theme?.cardBg || "rgba(30,30,30,0.9)",
+            color: theme?.text || "#fff",
+            fontSize: 14,
+            border: `2px solid ${theme?.border || "#444"}`,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: `0 4px 12px ${theme?.shadow || "rgba(0,0,0,0.3)"}`,
+            transition: "transform 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "scale(1.15)";
+            e.currentTarget.style.background = theme?.accent || "#00d4ff";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "scale(1)";
+            e.currentTarget.style.background = theme?.cardBg || "rgba(30,30,30,0.9)";
+          }}
+        >
+          ⏩
+        </button>
+      </div>
     </div>
   );
 }

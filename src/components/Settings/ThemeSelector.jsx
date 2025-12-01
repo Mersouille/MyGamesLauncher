@@ -67,19 +67,21 @@ export default function ThemeSelector({ settings, onChange }) {
             zIndex: 9998,
             background: currentTheme.cardBg,
             border: `2px solid ${currentTheme.border}`,
-            borderRadius: "16px",
-            padding: "16px",
+            borderRadius: "12px",
+            padding: "12px",
             boxShadow: `0 8px 32px ${currentTheme.shadow}`,
-            minWidth: "280px",
+            minWidth: "220px",
+            maxWidth: "240px",
             maxHeight: "calc(100vh - 120px)",
             overflowY: "auto",
             animation: "slideIn 0.3s ease",
+            backdropFilter: "none",
           }}
         >
           <h3
             style={{
-              margin: "0 0 16px 0",
-              fontSize: "1.2rem",
+              margin: "0 0 12px 0",
+              fontSize: "1rem",
               fontWeight: "700",
               color: currentTheme.text,
               textAlign: "center",
@@ -88,45 +90,45 @@ export default function ThemeSelector({ settings, onChange }) {
             🎨 Affichage
           </h3>
 
-          {/*  Curseur Taille de la grille */}
+          {/* 📱 Info : Affichage Responsive Automatique */}
           <div
             style={{
-              marginBottom: "16px",
+              marginBottom: "12px",
               padding: "8px",
-              background: "rgba(0,0,0,0.2)",
-              borderRadius: "8px",
+              background: "rgba(139, 92, 246, 0.2)",
+              borderRadius: "6px",
+              border: "1px solid rgba(139, 92, 246, 0.4)",
             }}
           >
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: 6,
+                gap: "6px",
+                marginBottom: "3px",
               }}
             >
-              <span style={{ fontSize: "0.85rem", fontWeight: 500, color: currentTheme.text }}>
-                Taille grille
-              </span>
-              <span style={{ fontSize: "0.75rem", color: "#9ca3af" }}>
-                {Math.round((settings.uiScale ?? 1) * 100)}%
+              <span style={{ fontSize: "1rem" }}>📱</span>
+              <span style={{ fontSize: "0.8rem", fontWeight: 600, color: currentTheme.text }}>
+                Auto-adaptatif
               </span>
             </div>
-            <input
-              type="range"
-              min={0.6}
-              max={1.2}
-              step={0.05}
-              value={typeof settings.uiScale === "number" ? settings.uiScale : 1}
-              onChange={(e) => onChange({ ...settings, uiScale: parseFloat(e.target.value) })}
-              style={{ width: "100%", cursor: "pointer" }}
-            />
+            <p
+              style={{
+                fontSize: "0.7rem",
+                color: "#9ca3af",
+                lineHeight: "1.3",
+                margin: 0,
+              }}
+            >
+              La grille s'adapte à votre écran automatiquement.
+            </p>
           </div>
 
           <h4
             style={{
-              margin: "0 0 10px 0",
-              fontSize: "0.95rem",
+              margin: "0 0 8px 0",
+              fontSize: "0.85rem",
               fontWeight: "600",
               color: currentTheme.text,
               textAlign: "center",
@@ -139,7 +141,7 @@ export default function ThemeSelector({ settings, onChange }) {
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(2, 1fr)",
-              gap: "10px",
+              gap: "8px",
             }}
           >
             {Object.entries(themes).map(([key, theme]) => (
@@ -152,18 +154,18 @@ export default function ThemeSelector({ settings, onChange }) {
                   color: currentThemeKey === key ? theme.text : "#999",
                   border:
                     currentThemeKey === key
-                      ? `3px solid ${theme.accent}`
-                      : "2px solid rgba(128, 128, 128, 0.3)",
-                  borderRadius: "12px",
-                  padding: "12px 8px",
+                      ? `2px solid ${theme.accent}`
+                      : "1px solid rgba(128, 128, 128, 0.3)",
+                  borderRadius: "8px",
+                  padding: "8px 6px",
                   cursor: "pointer",
                   transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                  fontSize: "0.85rem",
+                  fontSize: "0.75rem",
                   fontWeight: currentThemeKey === key ? "700" : "500",
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
-                  gap: "6px",
+                  gap: "4px",
                   boxShadow:
                     currentThemeKey === key
                       ? `0 0 16px ${theme.shadow}, 0 4px 8px rgba(0, 0, 0, 0.2)`
@@ -190,31 +192,33 @@ export default function ThemeSelector({ settings, onChange }) {
                   <div
                     style={{
                       position: "absolute",
-                      top: "4px",
-                      right: "4px",
+                      top: "3px",
+                      right: "3px",
                       background: theme.accent,
                       color: theme.background,
-                      fontSize: "0.65rem",
+                      fontSize: "0.6rem",
                       fontWeight: "700",
-                      padding: "3px 7px",
-                      borderRadius: "6px",
+                      padding: "2px 5px",
+                      borderRadius: "4px",
                       boxShadow: "0 2px 4px rgba(0, 0, 0, 0.3)",
                     }}
                   >
                     ✓
                   </div>
                 )}
-                <span style={{ fontSize: "1.5rem" }}>{theme.icon}</span>
-                <span style={{ textAlign: "center", lineHeight: "1.2" }}>{theme.name}</span>
+                <span style={{ fontSize: "1.3rem" }}>{theme.icon}</span>
+                <span style={{ textAlign: "center", lineHeight: "1.1", fontSize: "0.75rem" }}>
+                  {theme.name}
+                </span>
               </button>
             ))}
           </div>
 
           <p
             style={{
-              fontSize: "0.75rem",
+              fontSize: "0.7rem",
               color: "#888",
-              marginTop: "12px",
+              marginTop: "8px",
               textAlign: "center",
               fontStyle: "italic",
             }}
