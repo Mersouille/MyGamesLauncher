@@ -1358,8 +1358,8 @@ function createAppMenu(lang = "fr") {
               type: "info",
               title: "MyGames Launcher",
               message: isFrench
-                ? "🎮 MyGames Launcher\nVersion 1.8\nDéveloppé avec ❤️ par Xpolaris"
-                : "🎮 MyGames Launcher\nVersion 1.8\nDeveloped with ❤️ by Xpolaris",
+                ? "🎮 MyGames Launcher\nVersion 1.8.7\nDéveloppé avec ❤️ par Xpolaris"
+                : "🎮 MyGames Launcher\nVersion 1.8.7\nDeveloped with ❤️ by Xpolaris",
               buttons: ["OK"],
             });
           },

@@ -22,6 +22,7 @@ import Sidebar from "./components/Sidebar"; // 🆕 Import du menu latéral
 import categories from "./data/categories.js";
 import { themes, getTheme } from "./data/themes"; // 🎨 Import des thèmes
 import useAchievements from "./hooks/useAchievements"; // 🏆 Hook achievements
+import { logConversation } from "./services/conversationLogger"; // 📝 Logger pour le journal
 
 export default function App() {
   // 📱 Hook responsive pour adapter l'affichage dynamiquement
@@ -112,10 +113,44 @@ export default function App() {
       // Courtes notifications utiles
       if (payload?.status === "available") {
         showToast("⬇️ Mise à jour disponible – téléchargement…", "#0d6efd");
+        // 📝 Log dans le journal
+        logConversation({
+          type: "info",
+          title: "Mise à jour disponible",
+          message: `Version ${payload?.info?.version || 'nouvelle'} disponible, téléchargement en cours`,
+          meta: { version: payload?.info?.version }
+        });
       } else if (payload?.status === "downloaded") {
         showToast("📦 Mise à jour prête à installer", "#28a745");
+        // 📝 Log dans le journal
+        logConversation({
+          type: "success",
+          title: "Mise à jour téléchargée",
+          message: "La mise à jour est prête à être installée",
+          meta: { version: payload?.info?.version }
+        });
       } else if (payload?.status === "error") {
         showToast("❌ Échec de la mise à jour", "#dc3545");
+        // 📝 Log dans le journal
+        logConversation({
+          type: "error",
+          title: "Erreur de mise à jour",
+          message: `Échec: ${payload?.error || 'Erreur inconnue'}`,
+          meta: { error: payload?.error }
+        });
+      }
+      
+      // ✅ Auto-disparition pour les statuts temporaires
+      if (payload?.status === "checking" || payload?.status === "manual-check") {
+        // Messages de vérification : disparaissent rapidement (remplacés par le résultat)
+        setTimeout(() => {
+          setUpdateStatus({ status: null, info: null, progress: null });
+        }, 2000);
+      } else if (payload?.status === "none") {
+        // Message "Application à jour" : reste visible plus longtemps
+        setTimeout(() => {
+          setUpdateStatus({ status: null, info: null, progress: null });
+        }, 4000); // 4 secondes pour lire le message
       }
     });
   }, []);
@@ -132,12 +167,33 @@ export default function App() {
       const result = await window.electronAPI.launchGame(game);
       if (result.success) {
         showToast(`🚀 ${game.name} lancé !`, "#28a745");
+        // 📝 Log dans le journal
+        logConversation({
+          type: "success",
+          title: "Jeu lancé",
+          message: `${game.name} a été lancé avec succès`,
+          meta: { gameId: game.id, gameName: game.name, gamePath: game.path }
+        });
       } else {
         showToast(`❌ Erreur : ${result.error}`, "#dc3545");
+        // 📝 Log erreur dans le journal
+        logConversation({
+          type: "error",
+          title: "Erreur de lancement",
+          message: `Impossible de lancer ${game.name}: ${result.error}`,
+          meta: { gameId: game.id, gameName: game.name, error: result.error }
+        });
       }
     } catch (err) {
       console.error("Erreur lancement jeu:", err);
       showToast(`❌ Erreur : ${err.message}`, "#dc3545");
+      // 📝 Log exception dans le journal
+      logConversation({
+        type: "error",
+        title: "Exception lors du lancement",
+        message: `Exception: ${err.message}`,
+        meta: { gameId: game.id, gameName: game.name, error: err.message }
+      });
     }
   };
 
@@ -146,12 +202,22 @@ export default function App() {
     const onKey = (e) => {
       if (e.key === "F9") {
         e.preventDefault();
-        setIsBigPicture((v) => !v);
+        const newState = !isBigPicture;
+        setIsBigPicture(newState);
+        // 📝 Log dans le journal
+        if (newState) {
+          logConversation({
+            type: "info",
+            title: "Mode Big Picture activé",
+            message: "Passage en mode Big Picture (F9)",
+            meta: { mode: "big-picture" }
+          });
+        }
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [isBigPicture]);
 
   // 🏆 Afficher les notifications d'achievements
   useEffect(() => {
@@ -159,6 +225,13 @@ export default function App() {
       const achievement = consumeNotification();
       if (achievement) {
         setCurrentAchievementNotification(achievement);
+        // 📝 Log dans le journal
+        logConversation({
+          type: "success",
+          title: "Achievement débloqué",
+          message: `🏆 ${achievement.name} - ${achievement.description}`,
+          meta: { achievementId: achievement.id, achievementName: achievement.name }
+        });
       }
     }
   }, [newlyUnlocked, currentAchievementNotification, consumeNotification]);
@@ -186,8 +259,23 @@ export default function App() {
         }
 
         setGames(normalized);
+        
+        // 📝 Log du démarrage dans le journal
+        logConversation({
+          type: "info",
+          title: "Application démarrée",
+          message: `MyGames Launcher démarré avec ${normalized.length} jeu(x)`,
+          meta: { gamesCount: normalized.length }
+        });
       } catch (err) {
         console.error("❌ Erreur chargement jeux :", err);
+        // 📝 Log erreur dans le journal
+        logConversation({
+          type: "error",
+          title: "Erreur de chargement",
+          message: `Impossible de charger les jeux: ${err.message}`,
+          meta: { error: err.message }
+        });
       }
     }
     fetchGames();
@@ -263,6 +351,14 @@ export default function App() {
     setGames((prevGames) => [...prevGames, newGame]);
     showToast(`🎮 ${gameName} ajouté dans ${category} !`, "#28a745");
     console.log("✅ Jeu ajouté :", newGame);
+    
+    // 📝 Log dans le journal
+    logConversation({
+      type: "success",
+      title: "Jeu ajouté",
+      message: `${gameName} ajouté dans la catégorie ${category}`,
+      meta: { gameId: newGame.id, gameName, category, path: pendingGamePath }
+    });
 
     // Réinitialiser l'état
     setShowCategorySelector(false);
@@ -543,6 +639,13 @@ export default function App() {
   }, []);
   const handleOpenJournal = useCallback(() => {
     setShowJournal(true);
+    // 📝 Log dans le journal (oui, c'est méta !)
+    logConversation({
+      type: "info",
+      title: "Journal consulté",
+      message: "L'utilisateur a ouvert le journal des conversations",
+      meta: { action: "open-journal" }
+    });
   }, []);
 
   return (
@@ -701,6 +804,13 @@ export default function App() {
                 onDelete={(game) => {
                   setGames((prev) => prev.filter((g) => g.id !== game.id));
                   showToast("🗑️ Jeu supprimé", "#dc3545");
+                  // 📝 Log dans le journal
+                  logConversation({
+                    type: "warning",
+                    title: "Jeu supprimé",
+                    message: `${game.name} a été supprimé de la bibliothèque`,
+                    meta: { gameId: game.id, gameName: game.name }
+                  });
                 }}
                 onToggleFavorite={(gameToToggle) => {
                   setGames((prev) =>

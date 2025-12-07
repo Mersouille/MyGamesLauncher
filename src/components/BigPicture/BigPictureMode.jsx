@@ -37,18 +37,18 @@ export default function BigPictureMode({
   // 📺 Colonnes et taille cartes dynamiques (optimisées 4K) - Tailles augmentées
   const getCols = () => {
     const w = window.innerWidth || 1920;
-    // 🎮 TV 4K : 8 colonnes, Full HD : 5 colonnes, Réduit : 3 colonnes
-    if (w >= 3840) return 8;
-    if (w >= 2560) return 6;
-    if (w >= 1920) return 5;
-    if (w >= 1280) return 4;
-    return 3;
+    // 🎮 Réduction du nombre de colonnes pour des jaquettes plus grandes
+    if (w >= 3840) return 6;  // 4K : 6 colonnes au lieu de 8
+    if (w >= 2560) return 5;  // 2K : 5 colonnes au lieu de 6
+    if (w >= 1920) return 4;  // Full HD : 4 colonnes au lieu de 5
+    if (w >= 1280) return 3;  // HD : 3 colonnes au lieu de 4
+    return 2;
   };
   const [cols, setCols] = useState(getCols());
   const getCardSize = () => {
     const w = window.innerWidth || 1920;
-    // 🎮 Cartes plus grandes : 280-400px selon la largeur d'écran
-    const base = w >= 3840 ? 380 : w >= 2560 ? 340 : w >= 1920 ? 300 : 250;
+    // 🎮 Cartes significativement plus grandes : 350-500px selon la largeur d'écran
+    const base = w >= 3840 ? 500 : w >= 2560 ? 420 : w >= 1920 ? 380 : 320;
     const cardW = Math.round(base * uiScale);
     const cardH = Math.round(cardW * 1.5);
     return { cardW, cardH };
@@ -257,18 +257,19 @@ export default function BigPictureMode({
                     background: "linear-gradient(to top, rgba(0,0,0,0.7), transparent 40%)",
                   }}
                 />
-                <div style={{ position: "absolute", left: 18, bottom: 16, right: 18 }}>
-                  <div style={{ fontSize: 26, fontWeight: 800, marginBottom: 10 }}>{g.name}</div>
-                  <div style={{ display: "flex", gap: 12 }}>
+                <div style={{ position: "absolute", left: 18, bottom: 16, right: 18, textAlign: "center" }}>
+                  <div style={{ fontSize: Math.round(cardW * 0.07), fontWeight: 800, marginBottom: 8 }}>{g.name}</div>
+                  <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
                     <button
                       onClick={() => onLaunchGame?.(g)}
                       style={{
-                        padding: "10px 16px",
-                        borderRadius: 12,
-                        fontSize: 18,
+                        padding: `${Math.round(cardW * 0.025)}px ${Math.round(cardW * 0.045)}px`,
+                        borderRadius: 8,
+                        fontSize: Math.round(cardW * 0.048),
                         fontWeight: 700,
                         background: `linear-gradient(90deg, ${currentTheme.primary}, ${currentTheme.accent})`,
                         color: currentTheme.text,
+                        whiteSpace: "nowrap",
                       }}
                     >
                       🚀 Lancer

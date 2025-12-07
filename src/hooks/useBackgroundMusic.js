@@ -19,12 +19,6 @@ export function useBackgroundMusic(settings = {}, onSettingsChange) {
     { id: "track4", name: "Ambiance 4", file: "./music/track4.mp3" },
   ]).current;
 
-  // Fonction pour obtenir une piste aléatoire
-  const getRandomTrack = useCallback(() => {
-    const randomIndex = Math.floor(Math.random() * tracks.length);
-    return tracks[randomIndex].id;
-  }, [tracks]);
-
   // État initial : piste aléatoire si pas définie (ne s'exécute qu'une fois)
   const [currentTrack, setCurrentTrack] = useState(() => {
     return (
@@ -36,30 +30,60 @@ export function useBackgroundMusic(settings = {}, onSettingsChange) {
     );
   });
 
+  // Refs pour avoir toujours les dernières valeurs sans déclencher de re-renders
+  const currentTrackRef = useRef(currentTrack);
+  currentTrackRef.current = currentTrack;
+  
+  const settingsRef = useRef(settings);
+  settingsRef.current = settings;
+
+  const tracksRef = useRef(tracks);
+  tracksRef.current = tracks;
+
+  // Fonction pour obtenir une piste aléatoire (différente de la piste actuelle)
+  const getRandomTrackRef = useRef((excludeTrackId) => {
+    const tracksList = tracksRef.current;
+    if (tracksList.length <= 1) return tracksList[0].id;
+    
+    const availableTracks = excludeTrackId 
+      ? tracksList.filter(t => t.id !== excludeTrackId)
+      : tracksList;
+    
+    const randomIndex = Math.floor(Math.random() * availableTracks.length);
+    return availableTracks[randomIndex].id;
+  });
+
   // Initialiser l'audio au montage
   useEffect(() => {
     if (!audioRef.current) {
       audioRef.current = new Audio();
       audioRef.current.loop = false; // Désactiver loop pour changement auto
       audioRef.current.volume = settings.musicVolume || 0.15;
+
+      // 🎵 CRITIQUE: Attacher l'événement ended UNE SEULE FOIS au montage
+      audioRef.current.addEventListener("ended", () => {
+        console.log("🎵 Piste terminée, changement automatique...");
+        const currentId = currentTrackRef.current;
+        const nextRandomTrack = getRandomTrackRef.current(currentId); // Exclure la piste actuelle
+        console.log("🎵 Ancienne piste:", currentId, "→ Nouvelle piste:", nextRandomTrack);
+        // ✅ Indiquer qu'on doit continuer la lecture avec la nouvelle piste
+        shouldContinuePlayingRef.current = true;
+        setCurrentTrack(nextRandomTrack);
+      });
     }
-
-    // 🎵 CRITIQUE: Réattacher l'événement ended à chaque changement de piste
-    const handleEnded = () => {
-      console.log("🎵 Piste terminée, changement automatique...");
-      const nextRandomTrack = getRandomTrack();
-      setCurrentTrack(nextRandomTrack);
-      console.log("🎵 Nouvelle piste:", nextRandomTrack);
-    };
-
-    audioRef.current.addEventListener("ended", handleEnded);
 
     return () => {
       if (audioRef.current) {
-        audioRef.current.removeEventListener("ended", handleEnded);
+        audioRef.current.pause();
+        audioRef.current.src = "";
       }
     };
-  }, [getRandomTrack, currentTrack]); // ✅ Réattacher quand currentTrack change
+  }, []); // ✅ Une seule fois au montage, pas de dépendances
+
+  // Ref pour savoir si c'est le premier chargement
+  const isFirstLoadRef = useRef(true);
+  // Ref pour savoir si on doit continuer la lecture après un changement de piste
+  const shouldContinuePlayingRef = useRef(false);
 
   // Charger la piste actuelle UNIQUEMENT quand currentTrack change (pas settings!)
   useEffect(() => {
@@ -67,10 +91,13 @@ export function useBackgroundMusic(settings = {}, onSettingsChange) {
 
     const track = tracks.find((t) => t.id === currentTrack) || tracks[0];
     const wasPlaying = !audioRef.current.paused;
+    const isFirstLoad = isFirstLoadRef.current;
+    // ✅ Prendre en compte shouldContinuePlayingRef pour la lecture auto après fin de piste
+    const shouldPlay = wasPlaying || shouldContinuePlayingRef.current || (isFirstLoad && settingsRef.current.musicEnabled);
 
     const loadTrack = () => {
       isLoadingRef.current = true;
-      console.log("🎵 Chargement de la piste:", track.name);
+      console.log("🎵 Chargement de la piste:", track.name, "shouldPlay:", shouldPlay, "isFirstLoad:", isFirstLoad);
 
       try {
         // Arrêter proprement sans déclencher une nouvelle lecture immédiate
@@ -88,14 +115,28 @@ export function useBackgroundMusic(settings = {}, onSettingsChange) {
             audioRef.current.removeEventListener("canplay", onCanPlay);
             // Attendre un micro tick pour éviter le conflit "play() interrupted by load request"
             setTimeout(() => {
-              if (wasPlaying) {
+              if (shouldPlay) {
+                if (isFirstLoad) {
+                  console.log("🎵 Démarrage automatique de la musique...");
+                  isFirstLoadRef.current = false;
+                } else {
+                  console.log("🎵 Lancement automatique de la nouvelle piste");
+                }
                 audioRef.current
                   .play()
-                  .then(() => setIsPlaying(true))
+                  .then(() => {
+                    setIsPlaying(true);
+                    // ✅ Réinitialiser le flag après lecture réussie
+                    shouldContinuePlayingRef.current = false;
+                  })
                   .catch((err) => console.warn("⚠️ Lecture auto échouée:", err))
                   .finally(() => (isLoadingRef.current = false));
               } else {
+                console.log("🎵 Piste chargée mais pas de lecture auto");
+                isFirstLoadRef.current = false;
                 isLoadingRef.current = false;
+                // ✅ Réinitialiser le flag même si pas de lecture
+                shouldContinuePlayingRef.current = false;
               }
             }, 50); // court délai pour laisser la source se stabiliser
           };
@@ -104,6 +145,7 @@ export function useBackgroundMusic(settings = {}, onSettingsChange) {
       } catch (e) {
         console.warn("⚠️ Erreur lors du chargement de la piste:", e);
         isLoadingRef.current = false;
+        isFirstLoadRef.current = false;
       }
     };
 
@@ -112,26 +154,7 @@ export function useBackgroundMusic(settings = {}, onSettingsChange) {
     } else {
       loadTrack();
     }
-  }, [currentTrack]); // ⚠️ SEULEMENT currentTrack - PAS settings!
-
-  // 🎵 Démarrage automatique au premier chargement si musicEnabled est true
-  const hasAutoStartedRef = useRef(false);
-
-  useEffect(() => {
-    if (!hasAutoStartedRef.current && settings.musicEnabled && audioRef.current) {
-      hasAutoStartedRef.current = true;
-      // Attendre un court instant pour que la piste soit chargée
-      setTimeout(() => {
-        if (audioRef.current && audioRef.current.paused) {
-          console.log("🎵 Démarrage automatique de la musique...");
-          audioRef.current.play().catch((err) => {
-            console.warn("⚠️ Impossible de lancer la musique automatiquement:", err);
-          });
-          setIsPlaying(true);
-        }
-      }, 500);
-    }
-  }, [settings.musicEnabled]);
+  }, [currentTrack, tracks]); // ⚠️ SEULEMENT currentTrack - PAS settings!
 
   // Gérer l'activation/désactivation de la musique (UNIQUEMENT au changement du toggle)
   const musicEnabledRef = useRef(settings.musicEnabled);
@@ -154,10 +177,6 @@ export function useBackgroundMusic(settings = {}, onSettingsChange) {
       }
     }
   }, [settings.musicEnabled]);
-
-  // Ref pour avoir toujours les derniers settings sans déclencher de re-renders
-  const settingsRef = useRef(settings);
-  settingsRef.current = settings;
 
   const onSettingsChangeRef = useRef(onSettingsChange);
   onSettingsChangeRef.current = onSettingsChange;

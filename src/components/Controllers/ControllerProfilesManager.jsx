@@ -578,7 +578,7 @@ const ControllerProfilesManager = ({
               style={{
                 width: "100%",
                 padding: "10px",
-                background: theme.bg,
+                background: theme.cardBg,
                 border: `1px solid ${theme.border}`,
                 borderRadius: "8px",
                 color: theme.text,
@@ -609,7 +609,7 @@ const ControllerProfilesManager = ({
               style={{
                 width: "100%",
                 padding: "10px",
-                background: theme.bg,
+                background: theme.cardBg,
                 border: `1px solid ${theme.border}`,
                 borderRadius: "8px",
                 color: theme.text,
