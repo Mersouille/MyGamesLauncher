@@ -108,6 +108,24 @@ contextBridge.exposeInMainWorld("electronAPI", {
   // 🌍 Mise à jour de la langue du menu
   updateMenuLanguage: (lang) => ipcRenderer.send("update-menu-language", lang),
 
+  // 🖥️ Gestion du menu Electron
+  hideMenu: () => ipcRenderer.invoke("hide-menu"),
+  showMenu: () => ipcRenderer.invoke("show-menu"),
+
+  // 🖥️ Écoute des changements de plein écran natif
+  onFullscreenChange: (callback) => {
+    const handler = (_, isFullscreen) => {
+      if (callback) callback(isFullscreen);
+    };
+    
+    ipcRenderer.on("fullscreen-changed", handler);
+    
+    // Retourner une fonction de nettoyage
+    return () => {
+      ipcRenderer.removeListener("fullscreen-changed", handler);
+    };
+  },
+
   // 🧩 Gestion des icônes
   getIconPath,
   getCoverUrl,

@@ -48,6 +48,22 @@ body {
 .header {
   position: relative;
 }
+
+/* === Masquage Sidebar en Big Picture / Plein écran === */
+.sidebar-wrapper.hidden {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  left: -9999px !important;
+}
+
+.sidebar-wrapper.hidden * {
+  display: none !important;
+  visibility: hidden !important;
+}
 body {
   margin: 0;
   padding: 0;

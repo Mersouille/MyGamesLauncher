@@ -311,12 +311,26 @@ const GameGrid = ({
                 }}
               />
 
+              {/* 🔐 Badge de protection PIN en haut à droite (si protégé) */}
+              {game.pinProtected && game.pin && (
+                <div
+                  className="absolute top-3 right-3 bg-red-600 rounded-full p-1.5 shadow-lg"
+                  title="Protégé par code PIN"
+                  style={{
+                    zIndex: 2,
+                  }}
+                >
+                  <span className="text-white text-base">🔒</span>
+                </div>
+              )}
+
               {/* ⭐ Bouton Favori en haut à droite */}
               <button
                 onClick={() => onToggleFavorite?.(game)}
                 title={game.favorite ? "Retirer des favoris" : "Ajouter aux favoris"}
-                className="absolute top-3 right-3 text-2xl transition-all duration-200"
+                className="absolute top-3 text-2xl transition-all duration-200"
                 style={{
+                  right: game.pinProtected && game.pin ? "48px" : "12px", // Décalage si cadenas présent
                   filter: game.favorite ? "none" : "grayscale(100%)",
                   opacity: game.favorite ? 1 : 0.5,
                   transform: game.favorite ? "scale(1.1)" : "scale(1)",
@@ -362,7 +376,7 @@ const GameGrid = ({
                 </div>
               )}
 
-              {/* 📛 Nom du jeu (superposé en bas) */}
+              {/*  Nom du jeu (superposé en bas) */}
               <div className="absolute bottom-14 left-0 right-0 text-center bg-gradient-to-t from-black/90 to-transparent py-4">
                 <h2 className="text-lg font-semibold">{game.name}</h2>
                 {/* ⏱️ Temps de jeu */}

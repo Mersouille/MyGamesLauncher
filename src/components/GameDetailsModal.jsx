@@ -17,6 +17,10 @@ export default function GameDetailsModal({ game, isOpen, onClose, onSave }) {
   const [category, setCategory] = useState(game?.category || "Action / Aventure");
   const [displayName, setDisplayName] = useState(game?.displayName || game?.name || "");
   const [hoveredStar, setHoveredStar] = useState(0);
+  const [pinProtected, setPinProtected] = useState(game?.pinProtected || false);
+  const [pin, setPin] = useState(game?.pin || "");
+  const [showPin, setShowPin] = useState(false); // 👁️ Afficher/masquer le PIN
+  const [description, setDescription] = useState(game?.description || "");
   const { gamepadConnected, registerListener } = useGamepad();
 
   // Ref pour éviter de réenregistrer le listener
@@ -31,6 +35,10 @@ export default function GameDetailsModal({ game, isOpen, onClose, onSave }) {
       setNotes(game.notes || "");
       setCategory(game.category || "Action / Aventure");
       setDisplayName(game.displayName || game.name || "");
+      setPinProtected(game.pinProtected || false);
+      setPin(game.pin || "");
+      setShowPin(false); // Toujours masquer le PIN au départ
+      setDescription(game.description || "");
     }
   }, [game]);
 
@@ -69,6 +77,9 @@ export default function GameDetailsModal({ game, isOpen, onClose, onSave }) {
       notes,
       category,
       displayName,
+      pinProtected,
+      pin: pinProtected ? pin : "", // Sauvegarder le PIN seulement si activé
+      description,
     });
     onClose();
   };
@@ -253,6 +264,88 @@ export default function GameDetailsModal({ game, isOpen, onClose, onSave }) {
                 />
                 <p className="text-gray-400 text-sm mt-2">
                   {notes.length} caractère{notes.length !== 1 ? "s" : ""}
+                </p>
+              </div>
+
+              {/* Protection par code PIN */}
+              <div className="border-t-2 border-gray-700 pt-6">
+                <div className="flex items-center justify-between mb-3">
+                  <label className="text-white font-semibold text-lg flex items-center gap-2">
+                    🔐 Protection par code PIN
+                  </label>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={pinProtected}
+                      onChange={(e) => setPinProtected(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-14 h-8 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+
+                {pinProtected && (
+                  <div className="space-y-3">
+                    <div className="relative">
+                      <input
+                        type={showPin ? "text" : "password"}
+                        inputMode="numeric"
+                        maxLength={4}
+                        value={pin}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, ""); // Seulement des chiffres
+                          setPin(value);
+                        }}
+                        placeholder="Code PIN (4 chiffres)"
+                        className="w-full bg-gray-800 text-white border-2 border-gray-700 rounded-lg p-4 pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-center text-2xl font-bold tracking-widest"
+                        style={{
+                          letterSpacing: showPin ? "0.5rem" : "0.3rem",
+                        }}
+                      />
+                      {/* Bouton pour révéler/masquer le PIN */}
+                      {pin.length === 4 && (
+                        <button
+                          type="button"
+                          onClick={() => setShowPin(!showPin)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-2xl hover:scale-110 transition-transform"
+                          title={showPin ? "Masquer le code PIN" : "Afficher le code PIN"}
+                        >
+                          {showPin ? "🙈" : "👁️"}
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-gray-400 text-sm">
+                      🔒 Un code PIN sera demandé avant de lancer ce jeu
+                    </p>
+                    {pin.length > 0 && pin.length < 4 && (
+                      <p className="text-yellow-500 text-sm">
+                        ⚠️ Le code PIN doit contenir exactement 4 chiffres
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {!pinProtected && (
+                  <p className="text-gray-400 text-sm">
+                    💡 Activez cette option pour protéger l'accès à ce jeu
+                  </p>
+                )}
+              </div>
+
+              {/* Description pour mode Big Picture */}
+              <div>
+                <label className="block text-white font-semibold mb-3 text-lg">
+                  📄 Description (Mode Big Picture)
+                </label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Description affichée au verso de la carte en mode Big Picture..."
+                  className="w-full bg-gray-800 text-white border-2 border-gray-700 rounded-lg p-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
+                  rows={4}
+                />
+                <p className="text-gray-400 text-sm mt-2">
+                  💡 Texte affiché sur le verso de la jaquette en mode Big Picture
                 </p>
               </div>
             </div>
