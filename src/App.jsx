@@ -8,6 +8,7 @@ import ImportGames from "./pages/ImportGames"; // 📥 Import Steam/Epic
 import CategorySelector from "./components/CategorySelector"; // 🆕 Modal de sélection moderne
 import SearchBar from "./components/SearchBar"; // 🔍 Barre de recherche
 import GameDetailsModal from "./components/GameDetailsModal"; // ⭐ Modal de détails du jeu
+import PinModal from "./components/PinModal"; // 🔐 Modal de code PIN
 import CollectionsManager from "./components/Collections/CollectionsManager"; // 📚 Gestionnaire de collections
 import AchievementsPage from "./pages/AchievementsPage"; // 🏆 Page achievements
 import AchievementNotification from "./components/Achievements/AchievementNotification"; // 🏆 Notification achievement
@@ -37,6 +38,7 @@ export default function App() {
     uiScale: 1, // Sera remplacé par responsive.uiScale
   });
   const [isBigPicture, setIsBigPicture] = useState(false); // 📺 Etat Big Picture
+  const [isFullscreen, setIsFullscreen] = useState(false); // 🖥️ État Plein écran
   const [showSettings, setShowSettings] = useState(false);
   const [currentCategory, setCurrentCategory] = useState("Tous les jeux"); // 🆕 État catégorie
 
@@ -75,6 +77,10 @@ export default function App() {
   const [controllerProfiles, setControllerProfiles] = useState([]);
   const [controllerProfilesLoaded, setControllerProfilesLoaded] = useState(false);
   const [showControllerManager, setShowControllerManager] = useState(false);
+
+  // 🔐 États pour le modal de code PIN
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pendingGameForPin, setPendingGameForPin] = useState(null);
 
   // �🏆 Hook de gestion des achievements
   const { unlockedAchievements, newlyUnlocked, consumeNotification } = useAchievements(
@@ -158,6 +164,13 @@ export default function App() {
   // � Lancer un jeu (réutilisable)
   const handleLaunchGame = async (game) => {
     try {
+      // 🔐 Vérifier si le jeu est protégé par code PIN
+      if (game.pinProtected && game.pin) {
+        setPendingGameForPin(game);
+        setShowPinModal(true);
+        return; // Attendre la validation du PIN
+      }
+
       // 🎵 Arrêter la musique avant de lancer le jeu
       if (music.isPlaying) {
         music.pause();
@@ -197,26 +210,123 @@ export default function App() {
     }
   };
 
-  // �📺 Raccourci clavier pour basculer le Mode Big Picture (F9)
+  // 🔐 Vérifier le code PIN et lancer le jeu
+  const handlePinSubmit = (enteredPin) => {
+    if (!pendingGameForPin) return false;
+
+    if (enteredPin === pendingGameForPin.pin) {
+      setShowPinModal(false);
+      // Lancer le jeu en court-circuitant la vérification PIN
+      const gameWithoutPin = { ...pendingGameForPin, pinProtected: false };
+      setPendingGameForPin(null);
+      handleLaunchGame(gameWithoutPin);
+      return true;
+    }
+
+    // PIN incorrect
+    logConversation({
+      type: "warning",
+      title: "Tentative d'accès refusée",
+      message: `Code PIN incorrect pour ${pendingGameForPin.name}`,
+      meta: { gameId: pendingGameForPin.id, gameName: pendingGameForPin.name }
+    });
+    return false;
+  };
+
+  // 🔓 Réinitialiser le code PIN d'un jeu (PIN oublié)
+  const handleResetPin = () => {
+    if (!pendingGameForPin) return;
+
+    // Supprimer la protection PIN du jeu
+    setGames((prev) =>
+      prev.map((g) =>
+        g.id === pendingGameForPin.id
+          ? { ...g, pinProtected: false, pin: "" }
+          : g
+      )
+    );
+
+    // Log dans le journal
+    logConversation({
+      type: "info",
+      title: "Code PIN réinitialisé",
+      message: `La protection par code PIN de ${pendingGameForPin.name} a été supprimée`,
+      meta: { gameId: pendingGameForPin.id, gameName: pendingGameForPin.name }
+    });
+
+    showToast(`🔓 Protection PIN supprimée pour ${pendingGameForPin.name}`, "#f59e0b");
+    setShowPinModal(false);
+    setPendingGameForPin(null);
+  };
+
+  // 📺 Raccourci clavier pour basculer le Mode Big Picture (F9)
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === "F9") {
         e.preventDefault();
         const newState = !isBigPicture;
         setIsBigPicture(newState);
-        // 📝 Log dans le journal
+        
+        // Gérer le menu Electron
         if (newState) {
+          console.log("🖥️ [F9] Activation Big Picture - Appel hideMenu()");
+          window.electronAPI?.hideMenu?.().then(result => {
+            console.log("🖥️ [F9] Résultat hideMenu():", result);
+          }).catch(err => {
+            console.error("❌ [F9] Erreur hideMenu():", err);
+          });
           logConversation({
             type: "info",
             title: "Mode Big Picture activé",
             message: "Passage en mode Big Picture (F9)",
             meta: { mode: "big-picture" }
           });
+        } else {
+          console.log("🖥️ [F9] Désactivation Big Picture - Appel showMenu()");
+          window.electronAPI?.showMenu?.().then(result => {
+            console.log("🖥️ [F9] Résultat showMenu():", result);
+          }).catch(err => {
+            console.error("❌ [F9] Erreur showMenu():", err);
+          });
         }
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
+  }, [isBigPicture]);
+
+  // 🖥️ Détecter les changements du mode plein écran
+  useEffect(() => {
+    // Écouter les événements DOM (pour F11 dans navigateur)
+    const handleFullscreenChange = () => {
+      const isNowFullscreen = !!document.fullscreenElement;
+      console.log("🖥️ [App] Changement mode plein écran (DOM):", isNowFullscreen);
+      setIsFullscreen(isNowFullscreen);
+      // NOTE: On ne masque PAS le menu Electron en mode plein écran
+      // Le menu reste visible pour accéder aux options
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+
+    // Écouter les événements Electron natifs (pour F11 dans Electron)
+    let cleanupElectronListener = null;
+    if (window.electronAPI?.onFullscreenChange) {
+      const listener = (isNowFullscreen) => {
+        console.log("🖥️ [App] Changement mode plein écran (Electron):", isNowFullscreen);
+        setIsFullscreen(isNowFullscreen);
+        // NOTE: On ne masque PAS le menu Electron en mode plein écran
+      };
+      
+      cleanupElectronListener = window.electronAPI.onFullscreenChange(listener);
+    }
+
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      // Nettoyer l'écouteur Electron
+      if (cleanupElectronListener && typeof cleanupElectronListener === 'function') {
+        cleanupElectronListener();
+      }
+    };
   }, [isBigPicture]);
 
   // 🏆 Afficher les notifications d'achievements
@@ -648,19 +758,40 @@ export default function App() {
     });
   }, []);
 
+  // 🐛 DEBUG - Affichage des états
+  console.log("🔍 [App Render] isBigPicture:", isBigPicture, "isFullscreen:", isFullscreen);
+
   return (
     <div style={{ display: "flex", height: "100vh", overflow: "hidden" }}>
-      {/* 🧭 Menu latéral gauche */}
-      <Sidebar
-        currentCategory={currentCategory}
-        onSelectCategory={handleSelectCategory}
-        collections={collections}
-        onManageCollections={handleManageCollections}
-        onManageControllers={handleManageControllers}
-        onOpenStatistics={handleOpenStatistics}
-        onOpenAchievements={handleOpenAchievements}
-        isModalOpen={isModalOpen}
-      />
+      {/* 🧭 Menu latéral gauche - Masqué UNIQUEMENT en mode Big Picture */}
+      <div 
+        className={`sidebar-wrapper ${isBigPicture ? 'hidden' : ''}`}
+        style={{ 
+          display: isBigPicture ? "none !important" : "block",
+          visibility: isBigPicture ? "hidden" : "visible",
+          width: isBigPicture ? "0" : "240px",
+          height: isBigPicture ? "0" : "100vh",
+          maxWidth: isBigPicture ? "0" : "240px",
+          maxHeight: isBigPicture ? "0" : "100vh",
+          overflow: isBigPicture ? "hidden" : "visible",
+          opacity: isBigPicture ? 0 : 1,
+          pointerEvents: isBigPicture ? "none" : "auto",
+          position: isBigPicture ? "absolute" : "relative",
+          left: isBigPicture ? "-10000px" : "0",
+          transform: isBigPicture ? "scale(0)" : "scale(1)",
+        }}
+      >
+        <Sidebar
+          currentCategory={currentCategory}
+          onSelectCategory={handleSelectCategory}
+          collections={collections}
+          onManageCollections={handleManageCollections}
+          onManageControllers={handleManageControllers}
+          onOpenStatistics={handleOpenStatistics}
+          onOpenAchievements={handleOpenAchievements}
+          isModalOpen={isModalOpen}
+        />
+      </div>
 
       {/* 🧩 Contenu principal */}
       <div
@@ -675,13 +806,23 @@ export default function App() {
           overflowY: "auto",
         }}
       >
-        {/* 🎨 Sélecteur rapide de thème (remplace l'ancien bouton paramètres) */}
-        <ThemeSelector settings={settings} onChange={handleSettingsChange} />
+        {/* 🎨 Sélecteur rapide de thème - Masqué UNIQUEMENT en mode Big Picture */}
+        {!isBigPicture && (
+          <ThemeSelector settings={settings} onChange={handleSettingsChange} />
+        )}
 
-        {/* 📺 Bouton flottant Big Picture (en haut à droite, sous le sélecteur de thème) */}
+        {/* 📺 Bouton flottant Big Picture - Masqué UNIQUEMENT en mode Big Picture */}
         {!isBigPicture && (
           <button
-            onClick={() => setIsBigPicture(true)}
+            onClick={() => {
+              console.log("🖥️ [Bouton] Activation Big Picture - Appel hideMenu()");
+              setIsBigPicture(true);
+              window.electronAPI?.hideMenu?.().then(result => {
+                console.log("🖥️ [Bouton] Résultat hideMenu():", result);
+              }).catch(err => {
+                console.error("❌ [Bouton] Erreur hideMenu():", err);
+              });
+            }}
             title="Activer le mode Big Picture (F9)"
             style={{
               position: "fixed",
@@ -700,15 +841,16 @@ export default function App() {
           </button>
         )}
 
-        {/* 🏷️ En-tête */}
-        <header
-          className="header"
-          style={{
-            textAlign: "center",
-            padding: "60px 0 30px",
-            position: "relative",
-          }}
-        >
+        {/* 🏷️ En-tête - Masqué UNIQUEMENT en mode Big Picture */}
+        {!isBigPicture && (
+          <header
+            className="header"
+            style={{
+              textAlign: "center",
+              padding: "60px 0 30px",
+              position: "relative",
+            }}
+          >
           <h1
             style={{
               fontSize: "2.6rem",
@@ -736,10 +878,12 @@ export default function App() {
           >
             Gérez et lancez vos jeux depuis une interface élégante
           </p>
-        </header>
+          </header>
+        )}
 
-        {/* ➕ Boutons d'actions */}
-        <div className="flex justify-center gap-4 my-6">
+        {/* ➕ Boutons d'actions - Masqués UNIQUEMENT en mode Big Picture */}
+        {!isBigPicture && (
+          <div className="flex justify-center gap-4 my-6">
           <button
             onClick={handleAddGame}
             className="font-semibold px-6 py-3 rounded-lg shadow-md transition-all duration-300"
@@ -776,20 +920,23 @@ export default function App() {
           >
             📥 Importer (Steam, Epic, etc.)
           </button>
-        </div>
+          </div>
+        )}
 
         {/* 🎯 Affichage : Toujours afficher GameGrid */}
         {/* ⚠️ Les pages spéciales (Statistiques, Achievements, Contrôleurs) sont des modals overlay */}
         {
           <>
-            {/* �🔍 Barre de recherche et filtres */}
-            <div className="max-w-7xl mx-auto px-6">
-              <SearchBar
-                onSearchChange={setSearchTerm}
-                onSortChange={setSortBy}
-                onFavoritesToggle={setFavoritesOnly}
-              />
-            </div>
+            {/* 🔍 Barre de recherche et filtres - Masqués UNIQUEMENT en mode Big Picture */}
+            {!isBigPicture && (
+              <div className="max-w-7xl mx-auto px-6">
+                <SearchBar
+                  onSearchChange={setSearchTerm}
+                  onSortChange={setSortBy}
+                  onFavoritesToggle={setFavoritesOnly}
+                />
+              </div>
+            )}
 
             {/* 🧩 Grille de jeux */}
             <main>
@@ -845,7 +992,16 @@ export default function App() {
             theme={settings.theme}
             initialCategory={currentCategory}
             uiScale={responsive.uiScale}
-            onClose={() => setIsBigPicture(false)}
+            onClose={() => {
+              console.log("🖥️ [BigPictureMode] Fermeture - Appel showMenu()");
+              setIsBigPicture(false);
+              // Toujours restaurer le menu en sortant de Big Picture
+              window.electronAPI?.showMenu?.().then(result => {
+                console.log("🖥️ [BigPictureMode] Résultat showMenu():", result);
+              }).catch(err => {
+                console.error("❌ [BigPictureMode] Erreur showMenu():", err);
+              });
+            }}
             onLaunchGame={(g) => handleLaunchGame(g)}
           />
         )}
@@ -992,6 +1148,9 @@ export default function App() {
                         notes: details.notes,
                         category: details.category,
                         displayName: details.displayName,
+                        pinProtected: details.pinProtected,
+                        pin: details.pin,
+                        description: details.description,
                       }
                     : g
                 )
@@ -1089,6 +1248,19 @@ export default function App() {
             onClose={() => setCurrentAchievementNotification(null)}
           />
         )}
+
+        {/* 🔐 Modal de code PIN */}
+        <PinModal
+          isOpen={showPinModal}
+          gameName={pendingGameForPin?.name}
+          theme={settings.theme}
+          onClose={() => {
+            setShowPinModal(false);
+            setPendingGameForPin(null);
+          }}
+          onSubmit={handlePinSubmit}
+          onResetPin={handleResetPin}
+        />
 
         {/* 🎵 Lecteur de musique flottant */}
         <MusicPlayer

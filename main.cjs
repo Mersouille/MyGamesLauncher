@@ -285,6 +285,73 @@ function createWindow() {
       console.log("✅ Fenêtre principale affichée");
     }, 500); // Petit délai pour une transition plus smooth
   });
+
+  // 🖥️ Gérer le menu en mode plein écran (via événements Electron natifs)
+  // ⚠️ TEMPORAIREMENT DÉSACTIVÉ - Ces événements causent des crashes
+  /*
+  win.on("enter-full-screen", () => {
+    try {
+      // Vérifier que la fenêtre existe et n'est pas détruite
+      if (!win || win.isDestroyed()) {
+        console.warn("⚠️ Fenêtre détruite lors de enter-full-screen");
+        return;
+      }
+      
+      // Masquer le menu Electron en mode plein écran
+      Menu.setApplicationMenu(null);
+      console.log("🖥️ [Event] Mode plein écran activé - Menu Electron masqué");
+      
+      // Notifier le renderer du changement (avec vérification et délai)
+      setTimeout(() => {
+        if (win && !win.isDestroyed() && win.webContents && !win.webContents.isDestroyed()) {
+          try {
+            win.webContents.send("fullscreen-changed", true);
+          } catch (sendError) {
+            console.error("❌ Erreur envoi fullscreen-changed:", sendError);
+          }
+        }
+      }, 50);
+    } catch (error) {
+      console.error("❌ Erreur enter-full-screen:", error);
+    }
+  });
+
+  win.on("leave-full-screen", () => {
+    try {
+      // Vérifier que la fenêtre existe et n'est pas détruite
+      if (!win || win.isDestroyed()) {
+        console.warn("⚠️ Fenêtre détruite lors de leave-full-screen");
+        return;
+      }
+      
+      // Restaurer le menu Electron en sortant du plein écran (avec délai)
+      setTimeout(() => {
+        if (!win || win.isDestroyed()) return;
+        
+        try {
+          createAppMenu(currentLang);
+          console.log("🖥️ [Event] Mode plein écran désactivé - Menu Electron restauré");
+        } catch (menuError) {
+          console.error("❌ Erreur lors de la restauration du menu:", menuError);
+        }
+      }, 100);
+      
+      // Notifier le renderer du changement (avec vérification et délai)
+      setTimeout(() => {
+        if (win && !win.isDestroyed() && win.webContents && !win.webContents.isDestroyed()) {
+          try {
+            win.webContents.send("fullscreen-changed", false);
+          } catch (sendError) {
+            console.error("❌ Erreur envoi fullscreen-changed:", sendError);
+          }
+        }
+      }, 50);
+    } catch (error) {
+      console.error("❌ Erreur leave-full-screen:", error);
+    }
+  });
+  */
+  console.log("⚠️ Les événements fullscreen natifs sont désactivés temporairement");
 }
 
 // ------------------------------------------------------------
@@ -440,6 +507,41 @@ ipcMain.handle("download-image", async (_, { url, filename }) => {
   } catch (err) {
     console.error("❌ download-image error:", err);
     return { success: false, error: err.message || String(err) };
+  }
+});
+
+// ------------------------------------------------------------
+// 🖥️ Gestion du menu Electron (masquer/afficher)
+ipcMain.handle("hide-menu", async () => {
+  try {
+    if (win && !win.isDestroyed()) {
+      // 🔧 Utiliser setMenuBarVisibility au lieu de setApplicationMenu
+      // qui fonctionne mieux sur Windows pour masquer la barre de menu
+      win.setMenuBarVisibility(false);
+      win.setAutoHideMenuBar(true);
+      console.log("🖥️ Menu masqué (demande depuis renderer)");
+      return { success: true };
+    }
+    return { success: false, error: "Window not available" };
+  } catch (error) {
+    console.error("❌ Erreur hide-menu:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("show-menu", async () => {
+  try {
+    if (win && !win.isDestroyed()) {
+      // 🔧 Restaurer la visibilité de la barre de menu
+      win.setMenuBarVisibility(true);
+      win.setAutoHideMenuBar(false);
+      console.log("🖥️ Menu restauré (demande depuis renderer)");
+      return { success: true };
+    }
+    return { success: false, error: "Window not available" };
+  } catch (error) {
+    console.error("❌ Erreur show-menu:", error);
+    return { success: false, error: error.message };
   }
 });
 
@@ -990,6 +1092,42 @@ ipcMain.handle("add-game", async () => {
 const { spawn } = require("child_process");
 const activeProcesses = new Map(); // Garde une trace des processus actifs
 
+// Supprime le flag "Exécuter en tant qu'administrateur" du registre Windows pour un exe donné.
+// Ce flag est stocké dans HKCU\...\AppCompatFlags\Layers avec la valeur "RUNASADMIN".
+// Sans cette suppression, spawn() échoue silencieusement car il n'utilise pas ShellExecute
+// et ne peut pas déclencher l'élévation UAC.
+function removeRunAsAdminFlag(exePath) {
+  const { execSync } = require("child_process");
+  try {
+    const regKey =
+      "HKCU\\Software\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers";
+    const ps = `
+      $regPath = 'HKCU:\\Software\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers'
+      $exePath = '${exePath.replace(/'/g, "''")}'
+      if (Test-Path $regPath) {
+        $val = (Get-ItemProperty -Path $regPath -Name $exePath -ErrorAction SilentlyContinue).$exePath
+        if ($val) {
+          $newVal = ($val -split ' ' | Where-Object { $_ -ne 'RUNASADMIN' }) -join ' '
+          if ($newVal -eq '') {
+            Remove-ItemProperty -Path $regPath -Name $exePath -ErrorAction SilentlyContinue
+            Write-Host 'REMOVED'
+          } else {
+            Set-ItemProperty -Path $regPath -Name $exePath -Value $newVal
+            Write-Host 'UPDATED'
+          }
+        } else { Write-Host 'NONE' }
+      } else { Write-Host 'NONE' }
+    `;
+    const result = execSync(`powershell -NoProfile -NonInteractive -Command "${ps.replace(/"/g, '\\"')}"`, {
+      encoding: "utf-8",
+      timeout: 5000,
+    }).trim();
+    console.log(`🔧 removeRunAsAdminFlag(${path.basename(exePath)}): ${result}`);
+  } catch (err) {
+    console.warn("⚠️ Impossible de vérifier le flag RunAsAdmin :", err.message);
+  }
+}
+
 ipcMain.handle("launch-game", async (_, game) => {
   try {
     // Support à la fois 'path' et 'exePath' pour compatibilité
@@ -1000,6 +1138,10 @@ ipcMain.handle("launch-game", async (_, game) => {
     }
 
     console.log(`🚀 Lancement du jeu : ${game.name} (${gamePath})`);
+
+    // Supprime automatiquement le flag "Exécuter en tant qu'administrateur" si présent
+    // afin d'éviter l'échec silencieux de spawn() face à une requête d'élévation UAC.
+    removeRunAsAdminFlag(gamePath);
 
     const startTime = Date.now();
     const gameDir = path.dirname(gamePath);
@@ -1173,6 +1315,12 @@ function registerLocalProtocol() {
 // ------------------------------------------------------------
 // 🔹 Création d’un menu personnalisé avec icônes et traductions
 function createAppMenu(lang = "fr") {
+  // 🛡️ Vérification de sécurité pour éviter les crashes
+  if (!win || win.isDestroyed()) {
+    console.warn("⚠️ createAppMenu appelé mais la fenêtre n'existe pas ou est détruite");
+    return;
+  }
+  
   const isFrench = lang === "fr";
 
   const template = [
@@ -1230,7 +1378,28 @@ function createAppMenu(lang = "fr") {
       label: isFrench ? "🖥️ Affichage" : "🖥️ View",
       submenu: [
         { role: "reload", label: isFrench ? "Recharger" : "Reload" },
-        { role: "togglefullscreen", label: isFrench ? "Plein écran" : "Fullscreen" },
+        { 
+          label: isFrench ? "Plein écran" : "Fullscreen",
+          accelerator: "F11",
+          click: () => {
+            try {
+              if (!win || win.isDestroyed()) {
+                console.warn("⚠️ Fenêtre non disponible pour fullscreen");
+                return;
+              }
+              
+              const isCurrentlyFullscreen = win.isFullScreen();
+              console.log("🖥️ Toggle fullscreen - État actuel:", isCurrentlyFullscreen);
+              
+              // Simplement basculer le plein écran, SANS masquer le menu
+              // (pour éviter les crashes)
+              win.setFullScreen(!isCurrentlyFullscreen);
+              
+            } catch (error) {
+              console.error("❌ Erreur toggle fullscreen:", error);
+            }
+          }
+        },
         { role: "toggleDevTools", label: isFrench ? "Outils de développement" : "DevTools" },
       ],
     },
@@ -1358,8 +1527,8 @@ function createAppMenu(lang = "fr") {
               type: "info",
               title: "MyGames Launcher",
               message: isFrench
-                ? "🎮 MyGames Launcher\nVersion 1.8.7\nDéveloppé avec ❤️ par Xpolaris"
-                : "🎮 MyGames Launcher\nVersion 1.8.7\nDeveloped with ❤️ by Xpolaris",
+                ? "🎮 MyGames Launcher\nVersion 1.9.0\nDéveloppé avec ❤️ par Xpolaris"
+                : "🎮 MyGames Launcher\nVersion 1.9.0\nDeveloped with ❤️ by Xpolaris",
               buttons: ["OK"],
             });
           },
