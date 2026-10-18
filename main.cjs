@@ -1096,36 +1096,61 @@ const activeProcesses = new Map(); // Garde une trace des processus actifs
 // Ce flag est stocké dans HKCU\...\AppCompatFlags\Layers avec la valeur "RUNASADMIN".
 // Sans cette suppression, spawn() échoue silencieusement car il n'utilise pas ShellExecute
 // et ne peut pas déclencher l'élévation UAC.
+// ⚠️ Utilise exec() (async) pour ne PAS bloquer le thread principal d'Electron.
 function removeRunAsAdminFlag(exePath) {
-  const { execSync } = require("child_process");
-  try {
-    const regKey =
-      "HKCU\\Software\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers";
-    const ps = `
-      $regPath = 'HKCU:\\Software\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers'
-      $exePath = '${exePath.replace(/'/g, "''")}'
-      if (Test-Path $regPath) {
-        $val = (Get-ItemProperty -Path $regPath -Name $exePath -ErrorAction SilentlyContinue).$exePath
-        if ($val) {
-          $newVal = ($val -split ' ' | Where-Object { $_ -ne 'RUNASADMIN' }) -join ' '
-          if ($newVal -eq '') {
-            Remove-ItemProperty -Path $regPath -Name $exePath -ErrorAction SilentlyContinue
-            Write-Host 'REMOVED'
-          } else {
-            Set-ItemProperty -Path $regPath -Name $exePath -Value $newVal
-            Write-Host 'UPDATED'
-          }
-        } else { Write-Host 'NONE' }
-      } else { Write-Host 'NONE' }
-    `;
-    const result = execSync(`powershell -NoProfile -NonInteractive -Command "${ps.replace(/"/g, '\\"')}"`, {
-      encoding: "utf-8",
-      timeout: 5000,
-    }).trim();
-    console.log(`🔧 removeRunAsAdminFlag(${path.basename(exePath)}): ${result}`);
-  } catch (err) {
-    console.warn("⚠️ Impossible de vérifier le flag RunAsAdmin :", err.message);
-  }
+  const { exec } = require("child_process");
+  const regKey =
+    "HKCU\\Software\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers";
+
+  return new Promise((resolve) => {
+    // 1) Lire la valeur actuelle via reg.exe (pas de PowerShell = plus rapide)
+    exec(
+      `reg query "${regKey}" /v "${exePath}" 2>nul`,
+      { encoding: "utf-8", timeout: 3000 },
+      (err, stdout) => {
+        if (err || !stdout.includes("RUNASADMIN")) {
+          // Pas de flag RunAsAdmin → rien à faire
+          console.log(`🔧 removeRunAsAdminFlag(${path.basename(exePath)}): NONE`);
+          return resolve();
+        }
+
+        // Extraire la valeur complète et retirer uniquement "RUNASADMIN"
+        const match = stdout.match(/REG_SZ\s+(.+)/);
+        if (!match) return resolve();
+
+        const currentVal = match[1].trim();
+        const newVal = currentVal
+          .split(/\s+/)
+          .filter((f) => f !== "RUNASADMIN")
+          .join(" ")
+          .trim();
+
+        if (newVal === "") {
+          // Plus aucun flag → supprimer l'entrée entière
+          exec(
+            `reg delete "${regKey}" /v "${exePath}" /f 2>nul`,
+            { timeout: 3000 },
+            () => {
+              console.log(`🔧 removeRunAsAdminFlag(${path.basename(exePath)}): REMOVED`);
+              resolve();
+            }
+          );
+        } else {
+          // D'autres flags existent → mettre à jour sans "RUNASADMIN"
+          exec(
+            `reg add "${regKey}" /v "${exePath}" /t REG_SZ /d "${newVal}" /f 2>nul`,
+            { timeout: 3000 },
+            () => {
+              console.log(`🔧 removeRunAsAdminFlag(${path.basename(exePath)}): UPDATED → ${newVal}`);
+              resolve();
+            }
+          );
+        }
+      }
+    );
+  }).catch((err) => {
+    console.warn("⚠️ removeRunAsAdminFlag a échoué silencieusement :", err?.message);
+  });
 }
 
 ipcMain.handle("launch-game", async (_, game) => {
@@ -1139,9 +1164,8 @@ ipcMain.handle("launch-game", async (_, game) => {
 
     console.log(`🚀 Lancement du jeu : ${game.name} (${gamePath})`);
 
-    // Supprime automatiquement le flag "Exécuter en tant qu'administrateur" si présent
-    // afin d'éviter l'échec silencieux de spawn() face à une requête d'élévation UAC.
-    removeRunAsAdminFlag(gamePath);
+    // Supprime le flag "Exécuter en tant qu'administrateur" si présent (async, non-bloquant).
+    await removeRunAsAdminFlag(gamePath);
 
     const startTime = Date.now();
     const gameDir = path.dirname(gamePath);
